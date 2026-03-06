@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fiat Fadua · Cristian Eguizabal · Tu 0km te está esperando</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --red:#E8001C;--dark:#070707;--card:#0f0f0f;--card2:#161616;
+  --border:#1e1e1e;--border2:#2a2a2a;--text:#F2F2F2;--muted:#666;
+  --hot:#FF4D4D;--med:#FFB400;--cold:#508CFF;--gold:#FFD700;--green:#22c55e;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--dark);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+
+/* FONDO */
+body::before{content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse 80% 50% at 0% 100%,rgba(232,0,28,.06),transparent 60%),
+             radial-gradient(ellipse 40% 30% at 100% 0%,rgba(232,0,28,.03),transparent 50%);
+  pointer-events:none;z-index:0;}
+
+.wrap{position:relative;z-index:1;max-width:680px;margin:0 auto;padding:0 18px;width:100%;}
+
+/* ─── TOPBAR ─── */
+.topbar{padding:18px 0 14px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--border);margin-bottom:0;}
+.logo-fiat{background:var(--red);color:#fff;font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:3px;padding:5px 14px;clip-path:polygon(0 0,95% 0,100% 100%,5% 100%);}
+.logo-fadua{font-size:11px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;border-left:1px solid var(--border);padding-left:12px;}
+.topbar-asesor{margin-left:auto;text-align:right;}
+.topbar-asesor span{display:block;font-size:10px;color:var(--muted);letter-spacing:1px;}
+.topbar-asesor strong{font-size:13px;font-weight:600;}
+
+/* ─── PROGRESS ─── */
+.prog-wrap{padding:14px 0 0;position:sticky;top:0;z-index:10;background:var(--dark);padding-bottom:2px;}
+.prog-meta{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
+.prog-bar{height:2px;background:var(--border);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--red),#ff6b35);border-radius:2px;transition:width .5s cubic-bezier(.4,0,.2,1);}
+
+/* ─── SLIDES ─── */
+.slides{min-height:60vh;padding:32px 0 60px;display:flex;flex-direction:column;justify-content:center;}
+.slide{display:none;animation:up .32s ease forwards;}
+.slide.active{display:block;}
+@keyframes up{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse2{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+@keyframes shine{0%{left:-100%}100%{left:200%}}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+
+.q-tag{font-size:10px;color:var(--red);letter-spacing:3px;text-transform:uppercase;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.q-tag::after{content:'';display:block;width:24px;height:1px;background:rgba(232,0,28,.4);}
+.q-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,7vw,46px);line-height:1.02;margin-bottom:10px;letter-spacing:.5px;}
+.q-title .accent{color:var(--red);}
+.q-title .gold{color:var(--gold);}
+.q-sub{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.7;}
+.q-sub strong{color:#bbb;}
+
+/* ─── OPCIONES GRID ─── */
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.opt{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:14px 15px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.opt:hover{border-color:rgba(232,0,28,.5);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.3);}
+.opt.selected{border-color:var(--red);background:rgba(232,0,28,.07);box-shadow:0 0 0 1px rgba(232,0,28,.2);}
+.opt-ic{font-size:22px;margin-bottom:7px;}
+.opt-lbl{font-size:13px;font-weight:600;line-height:1.35;}
+.opt-dsc{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.4;}
+.opt-tag{position:absolute;top:8px;right:8px;background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:100px;letter-spacing:.5px;}
+
+/* ─── CHIPS ─── */
+.chips{display:flex;flex-wrap:wrap;gap:8px;}
+.chip{background:var(--card);border:1px solid var(--border);border-radius:100px;padding:9px 18px;font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;}
+.chip:hover{border-color:var(--red);color:var(--red);}
+.chip.selected{background:rgba(232,0,28,.09);border-color:var(--red);color:var(--red);}
+
+/* ─── DOLOR CARDS (grande, emocional) ─── */
+.dolor-opts{display:flex;flex-direction:column;gap:10px;}
+.dolor-opt{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px;cursor:pointer;transition:all .22s;display:flex;align-items:flex-start;gap:14px;}
+.dolor-opt:hover{border-color:rgba(232,0,28,.4);transform:translateX(3px);}
+.dolor-opt.selected{border-color:var(--red);background:rgba(232,0,28,.07);}
+.dolor-ic{font-size:24px;flex-shrink:0;margin-top:1px;}
+.dolor-txt{}
+.dolor-lbl{font-size:13px;font-weight:600;line-height:1.4;margin-bottom:3px;}
+.dolor-sub{font-size:11px;color:var(--muted);line-height:1.5;}
+
+/* ─── MODELO CARDS ─── */
+.modelo-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.modelo-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 14px 12px;cursor:pointer;transition:all .22s;position:relative;overflow:hidden;}
+.modelo-card:hover{border-color:rgba(232,0,28,.5);transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,.4);}
+.modelo-card.selected{border-color:var(--red);background:rgba(232,0,28,.08);}
+.modelo-card.recommended::after{content:'⭐ RECOMENDADO';position:absolute;top:0;right:0;background:var(--red);color:#fff;font-size:8px;font-weight:700;padding:3px 8px;border-radius:0 12px 0 8px;letter-spacing:.5px;}
+.mc-emoji{font-size:24px;margin-bottom:6px;}
+.mc-nombre{font-size:13px;font-weight:700;margin-bottom:2px;}
+.mc-plan{font-size:10px;color:var(--muted);margin-bottom:6px;}
+.mc-cuota{font-size:11px;color:var(--green);font-weight:600;}
+.mc-desc{font-size:10px;color:var(--muted);line-height:1.4;margin-top:4px;}
+
+/* ─── PRESUPUESTO + LIVE REC ─── */
+.range-val{font-family:'Bebas Neue',sans-serif;font-size:50px;color:var(--red);letter-spacing:1px;line-height:1;}
+.range-sub{font-size:11px;color:var(--muted);margin-bottom:16px;margin-top:2px;}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:3px;background:var(--border2);border-radius:2px;outline:none;padding:0;border:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;background:var(--red);border-radius:50%;cursor:pointer;box-shadow:0 0 12px rgba(232,0,28,.6);transition:transform .15s;}
+input[type=range]::-webkit-slider-thumb:active{transform:scale(1.2);}
+.range-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:8px;}
+
+/* Card de recomendación en vivo */
+.live-rec{margin-top:20px;border-radius:14px;overflow:hidden;transition:all .3s;animation:fadein .3s ease;}
+.live-rec-header{background:var(--red);padding:10px 16px;display:flex;align-items:center;gap:8px;}
+.live-rec-header span{font-size:11px;font-weight:700;color:#fff;letter-spacing:1px;text-transform:uppercase;}
+.live-rec-body{background:var(--card2);border:1px solid var(--border2);border-top:none;border-radius:0 0 14px 14px;padding:16px;}
+.lrb-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;}
+.lrb-nombre{font-size:18px;font-weight:700;}
+.lrb-plan{font-size:11px;color:var(--muted);margin-top:2px;}
+.lrb-cuota-box{text-align:right;}
+.lrb-cuota{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--green);line-height:1;}
+.lrb-cuota-lbl{font-size:10px;color:var(--muted);}
+.lrb-adj{display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);border-radius:100px;padding:5px 12px;font-size:11px;font-weight:600;color:var(--green);}
+.lrb-otros{margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;}
+.lrb-otro{background:var(--card);border:1px solid var(--border2);border-radius:8px;padding:6px 10px;font-size:11px;color:var(--muted);cursor:pointer;transition:all .2s;}
+.lrb-otro:hover{border-color:var(--red);color:var(--text);}
+.lrb-otro.sel{border-color:var(--red);color:var(--red);background:rgba(232,0,28,.06);}
+.live-rec-none{background:var(--card2);border:1px solid var(--border2);border-radius:14px;padding:16px;text-align:center;}
+.lrn-txt{font-size:13px;color:var(--muted);line-height:1.6;}
+
+/* ─── RECOMENDACIÓN INTELIGENTE ─── */
+.rec-card{background:linear-gradient(135deg,var(--card2),#0c0c0c);border:1px solid var(--border2);border-radius:16px;padding:24px;margin-bottom:20px;position:relative;overflow:hidden;}
+.rec-card::before{content:'';position:absolute;top:0;left:-100%;width:50%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(232,0,28,.04),transparent);
+  animation:shine 3s infinite;}
+.rc-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(232,0,28,.1);border:1px solid rgba(232,0,28,.25);border-radius:100px;padding:4px 12px;font-size:10px;font-weight:700;color:var(--red);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;}
+.rc-emoji{font-size:36px;margin-bottom:8px;}
+.rc-nombre{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:1px;margin-bottom:4px;}
+.rc-plan{font-size:12px;color:var(--muted);margin-bottom:16px;}
+.rc-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.rc-stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
+.rc-stat-val{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--text);line-height:1;}
+.rc-stat-lbl{font-size:10px;color:var(--muted);margin-top:2px;}
+.rc-adj{display:flex;align-items:center;gap:8px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--green);font-weight:600;}
+.rc-adj-ico{font-size:18px;}
+.rec-alt{font-size:12px;color:var(--muted);margin-bottom:10px;}
+.rec-alts{display:flex;flex-wrap:wrap;gap:8px;}
+.rec-alt-btn{background:var(--card);border:1px solid var(--border2);border-radius:8px;padding:8px 14px;font-size:12px;cursor:pointer;transition:all .2s;}
+.rec-alt-btn:hover{border-color:var(--red);color:var(--red);}
+
+/* ─── ESPEJO ─── */
+.espejo-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.esp-opt{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 14px;cursor:pointer;transition:all .25s;text-align:center;}
+.esp-opt:hover{border-color:rgba(232,0,28,.5);transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,.4);}
+.esp-opt.selected{border-color:var(--red);background:rgba(232,0,28,.08);transform:translateY(-3px);}
+.esp-ic{font-size:30px;margin-bottom:9px;display:block;}
+.esp-lbl{font-size:13px;font-weight:600;line-height:1.35;margin-bottom:4px;}
+.esp-sub{font-size:11px;color:var(--muted);line-height:1.45;}
+
+/* ─── GARANTÍA SLIDE ─── */
+.garantia-hero{background:linear-gradient(135deg,rgba(34,197,94,.06),rgba(34,197,94,.02));border:1px solid rgba(34,197,94,.2);border-radius:16px;padding:22px;margin-bottom:18px;}
+.garantia-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);border-radius:100px;padding:5px 14px;font-size:10px;font-weight:700;color:var(--green);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;}
+.garantia-titulo{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--green);letter-spacing:1px;margin-bottom:10px;line-height:1.1;}
+.garantia-desc{font-size:13px;color:#bbb;line-height:1.65;}
+.vs-table{background:var(--card2);border:1px solid var(--border2);border-radius:14px;overflow:hidden;margin-bottom:18px;}
+.vs-header{display:grid;grid-template-columns:1fr 1fr 1fr;background:var(--card);border-bottom:1px solid var(--border2);}
+.vs-h{padding:10px 12px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+.vs-h.plan{color:var(--green);}
+.vs-h.banco{color:var(--hot);}
+.vs-row{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:1px solid rgba(255,255,255,.04);padding:10px 12px;font-size:12px;align-items:center;}
+.vs-row:last-child{border-bottom:none;}
+.vs-row .lbl{color:var(--muted);}
+.vs-row .plan-val{color:var(--green);font-weight:600;}
+.vs-row .banco-val{color:var(--hot);}
+
+/* ─── INPUTS ─── */
+input[type=text],input[type=tel],textarea,select{width:100%;background:var(--card);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;padding:13px 16px;outline:none;transition:border-color .2s;-webkit-appearance:none;appearance:none;}
+input:focus,textarea:focus,select:focus{border-color:var(--red);}
+textarea{resize:none;min-height:80px;}
+select option{background:var(--dark);}
+.field-group{display:flex;flex-direction:column;gap:10px;}
+.field-lbl{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;}
+
+/* ─── NAV ─── */
+.nav{display:flex;gap:10px;margin-top:26px;align-items:center;flex-wrap:wrap;}
+.btn-next{background:var(--red);color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;padding:13px 28px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all .2s;clip-path:polygon(0 0,97% 0,100% 100%,3% 100%);}
+.btn-next:hover:not(:disabled){background:#c5001a;transform:translateX(2px);}
+.btn-next:disabled{background:var(--border2);color:var(--muted);cursor:default;}
+.btn-back{background:transparent;color:var(--muted);border:1px solid var(--border2);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;padding:13px 16px;cursor:pointer;transition:all .2s;}
+.btn-back:hover{color:var(--text);border-color:#444;}
+
+/* ─── INFO INLINE ─── */
+.info-inline{background:linear-gradient(135deg,rgba(232,0,28,.06),transparent);border:1px solid rgba(232,0,28,.2);border-radius:10px;padding:14px 16px;margin-top:16px;}
+.ii-ico{font-size:16px;margin-bottom:5px;}
+.ii-ttl{font-size:10px;font-weight:700;color:var(--red);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;}
+.ii-txt{font-size:12px;color:#bbb;line-height:1.6;}
+
+/* ─── PANTALLA GRACIAS ─── */
+.thanks-screen{display:none;padding:36px 0 48px;animation:up .5s ease forwards;}
+.thanks-screen.active{display:block;}
+.confetti-row{font-size:30px;text-align:center;margin-bottom:10px;animation:pulse2 2.5s infinite;}
+.thanks-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(34px,9vw,56px);text-align:center;line-height:.98;margin-bottom:10px;}
+.thanks-title .acc{color:var(--red);}
+.thanks-sub{font-size:13px;color:var(--muted);text-align:center;line-height:1.7;margin-bottom:6px;}
+.thanks-espejo{font-size:14px;color:#ddd;text-align:center;font-style:italic;margin-bottom:24px;padding:0 10px;}
+
+.urgency-bar{display:flex;align-items:center;gap:12px;background:rgba(232,0,28,.06);border:1px solid rgba(232,0,28,.2);border-radius:10px;padding:12px 16px;margin-bottom:18px;}
+.urgency-dot{width:9px;height:9px;background:var(--red);border-radius:50%;flex-shrink:0;box-shadow:0 0 8px var(--red);animation:pulse2 1.5s infinite;}
+.urgency-txt{font-size:13px;font-weight:600;}
+.urgency-cnt{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--red);margin-left:auto;flex-shrink:0;}
+
+.prize-card{background:linear-gradient(135deg,#0e0a00,#150c00,#0e0a00);border:1px solid rgba(255,215,0,.2);border-radius:16px;padding:24px;margin-bottom:20px;position:relative;overflow:hidden;}
+.prize-card::before{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,215,0,.05),transparent);animation:shine 3.5s infinite;}
+.prize-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(255,215,0,.1);border:1px solid rgba(255,215,0,.25);border-radius:100px;padding:4px 12px;font-size:9px;font-weight:700;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px;}
+.prize-titulo{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--gold);letter-spacing:2px;margin-bottom:14px;}
+.prize-list{display:flex;flex-direction:column;gap:10px;}
+.prize-item{display:flex;align-items:flex-start;gap:10px;background:rgba(255,215,0,.03);border:1px solid rgba(255,215,0,.08);border-radius:9px;padding:10px 12px;}
+.pi-ic{font-size:20px;flex-shrink:0;}
+.pi-name{font-size:13px;font-weight:600;line-height:1.3;}
+.pi-desc{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4;}
+
+/* CTA */
+.thanks-cta{background:var(--red);color:#fff;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:700;padding:17px 28px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;transition:all .25s;width:100%;margin-bottom:10px;clip-path:polygon(0 0,98% 0,100% 100%,2% 100%);}
+.thanks-cta:hover{background:#c5001a;transform:scale(1.02);}
+.thanks-small{font-size:11px;color:var(--muted);text-align:center;line-height:1.5;margin-bottom:20px;}
+.save-ok{display:none;align-items:center;gap:6px;justify-content:center;font-size:12px;color:var(--green);margin-bottom:12px;}
+.save-ok.vis{display:flex;}
+
+/* ADMIN */
+.admin-sec{margin-top:6px;border-top:1px solid var(--border);padding-top:18px;display:none;}
+.admin-sec.vis{display:block;animation:fadein .3s;}
+.adm-row{display:flex;gap:8px;}
+.adm-inp{flex:1;background:var(--card);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;padding:10px 14px;outline:none;transition:border-color .2s;}
+.adm-inp:focus{border-color:var(--red);}
+.adm-btn{background:var(--border2);color:var(--muted);border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;padding:10px 18px;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.adm-btn:hover{background:var(--red);color:#fff;}
+.adm-err{font-size:11px;color:var(--hot);margin-top:5px;display:none;}
+
+.panel{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px;margin-top:14px;margin-bottom:18px;}
+.ph{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px;}
+.ph-ttl{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;color:var(--red);}
+.exp-btn{background:var(--red);color:#fff;border:none;border-radius:7px;padding:8px 18px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;}
+.exp-btn:hover{background:#c5001a;}
+.cntrs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;}
+.cnt{border-radius:9px;padding:12px;text-align:center;}
+.cnt-n{font-family:'Bebas Neue',sans-serif;font-size:32px;line-height:1;}
+.cnt-l{font-size:10px;color:var(--muted);letter-spacing:1px;margin-top:2px;}
+.tbl-w{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:11px;}
+th{padding:7px 9px;text-align:left;color:var(--muted);font-weight:500;white-space:nowrap;border-bottom:1px solid var(--border);}
+td{padding:7px 9px;border-bottom:1px solid #111;vertical-align:top;}
+.bdg{display:inline-block;border-radius:100px;padding:2px 9px;font-size:10px;font-weight:700;letter-spacing:.5px;}
+
+.lead-det{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:12px;}
+.ld-ttl{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2px;color:var(--red);margin-bottom:12px;}
+.prow{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #111;font-size:12px;gap:10px;}
+.prow:last-child{border-bottom:none;}
+.pk{color:var(--muted);flex-shrink:0;min-width:120px;}
+.pv{font-weight:500;text-align:right;}
+
+.est-banner{border-radius:12px;padding:14px 18px;margin-bottom:12px;display:flex;align-items:center;gap:12px;}
+.eb-emoji{font-size:26px;}
+.eb-ttl{font-family:'Bebas Neue',sans-serif;font-size:21px;letter-spacing:2px;}
+.eb-sc{font-size:12px;opacity:.7;margin-top:2px;}
+
+.obj-box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:12px;}
+.obj-box h4{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;}
+.obj-item2{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid #111;font-size:12px;}
+.obj-item2:last-child{border-bottom:none;}
+.oi2{color:var(--red);font-weight:700;flex-shrink:0;}
+.ot2{color:#bbb;line-height:1.55;}
+
+.vid-box{background:linear-gradient(135deg,rgba(232,0,28,.07),transparent);border:1px solid rgba(232,0,28,.18);border-radius:12px;padding:16px 18px;margin-bottom:12px;}
+.vid-box h4{font-size:10px;color:var(--red);letter-spacing:2px;text-transform:uppercase;margin-bottom:7px;}
+.vid-box p{font-size:12px;color:#bbb;line-height:1.6;}
+
+.nuevo-btn{background:transparent;border:1px solid var(--border2);color:var(--muted);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;padding:10px 22px;cursor:pointer;transition:all .2s;}
+.nuevo-btn:hover{border-color:#555;color:var(--text);}
+
+@media(max-width:520px){
+  .opts,.modelo-grid,.espejo-opts{grid-template-columns:1fr;}
+  .cntrs{grid-template-columns:repeat(3,1fr);}
+  .q-title{font-size:28px;}
+  .rc-stats{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo-fiat">FIAT</div>
+  <div class="logo-fadua">FADUA</div>
+  <div class="topbar-asesor">
+    <span>Asesor oficial</span>
+    <strong>Cristian Eguizabal</strong>
+  </div>
+</div>
+
+<!-- PROGRESS -->
+<div class="prog-wrap">
+  <div class="prog-meta">
+    <span id="stepLbl">Bienvenido</span>
+    <span id="pctLbl">0%</span>
+  </div>
+  <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+</div>
+
+<!-- SLIDES -->
+<div class="slides">
+
+<!-- 0: INTRO -->
+<div class="slide active" id="s0">
+  <div class="q-tag">Fiat Fadua · Salta</div>
+  <div class="q-title">Tu <span class="accent">0km</span> te está<br>esperando.<br>Solo falta dar<br><span class="gold">el primer paso.</span></div>
+  <div class="q-sub">En <strong>3 minutos</strong> Cristian te arma un plan personalizado con los números exactos de este mes.<br>Sin banco. Sin intereses. <strong>Con adjudicación garantizada.</strong></div>
+  <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:26px;">
+    <span style="font-size:11px;color:var(--muted);">✅ 84 cuotas fijas, 0% interés</span>
+    <span style="font-size:11px;color:var(--muted);">✅ Adjudicación pactada</span>
+    <span style="font-size:11px;color:var(--muted);">✅ Solo tu DNI</span>
+  </div>
+  <div class="nav"><button class="btn-next" onclick="gt(1)">Quiero mi 0km →</button></div>
+</div>
+
+<!-- 1: PERFIL (detecta situación) -->
+<div class="slide" id="s1">
+  <div class="q-tag">01 — Tu situación</div>
+  <div class="q-title">¿Qué describe mejor<br>tu <span class="accent">situación hoy</span>?</div>
+  <div class="q-sub">Sé honesto — esto define qué plan se adapta exactamente a vos.</div>
+  <div class="dolor-opts" id="o1">
+    <div class="dolor-opt" onclick="setPerfil(this,'sin_auto','Sin auto y lo necesito','Dependo de remises, colectivos o pedirle a otros')">
+      <div class="dolor-ic">😤</div>
+      <div class="dolor-txt"><div class="dolor-lbl">No tengo auto y lo necesito ya</div><div class="dolor-sub">Dependo de remises, colectivos o pedirle el auto a otros</div></div>
+    </div>
+    <div class="dolor-opt" onclick="setPerfil(this,'auto_viejo','Auto viejo que me come el sueldo','Gasto más en mecánico que en cuotas')">
+      <div class="dolor-ic">🔧</div>
+      <div class="dolor-txt"><div class="dolor-lbl">Tengo un auto que me come el sueldo</div><div class="dolor-sub">Cada mes aparece algo nuevo para arreglar</div></div>
+    </div>
+    <div class="dolor-opt" onclick="setPerfil(this,'familia','Familia que creció y necesita espacio','El auto actual ya no alcanza para todos')">
+      <div class="dolor-ic">👨‍👩‍👧‍👦</div>
+      <div class="dolor-txt"><div class="dolor-lbl">Mi familia creció y necesito más espacio</div><div class="dolor-sub">El auto que tengo ya no alcanza para todos</div></div>
+    </div>
+    <div class="dolor-opt" onclick="setPerfil(this,'joven','Quiero mi primer 0km propio','Independencia y libertad de movimiento')">
+      <div class="dolor-ic">🗝️</div>
+      <div class="dolor-txt"><div class="dolor-lbl">Quiero mi primer 0km y ser independiente</div><div class="dolor-sub">Cansado de depender de otros para moverme</div></div>
+    </div>
+    <div class="dolor-opt" onclick="setPerfil(this,'banco','Fui al banco y las cuotas eran imposibles','El banco cobra el doble del valor del auto')">
+      <div class="dolor-ic">🏦</div>
+      <div class="dolor-txt"><div class="dolor-lbl">Fui al banco y las cuotas eran imposibles</div><div class="dolor-sub">No entiendo cómo alguien puede pagar eso</div></div>
+    </div>
+    <div class="dolor-opt" onclick="setPerfil(this,'upgrade','Quiero cambiar a algo mejor y más moderno','Mi auto actual ya no me representa')">
+      <div class="dolor-ic">⬆️</div>
+      <div class="dolor-txt"><div class="dolor-lbl">Quiero upgradear a algo más moderno</div><div class="dolor-sub">Mi auto actual ya no me representa</div></div>
+    </div>
+  </div>
+  <div class="nav">
+    <button class="btn-back" onclick="gt(0)">← Atrás</button>
+    <button class="btn-next" id="b1" disabled onclick="gt(2)">Siguiente →</button>
+  </div>
+</div>
+
+<!-- 2: DOLOR PROFUNDO (personalizado) -->
+<div class="slide" id="s2">
+  <div class="q-tag">02 — El costo real</div>
+  <div class="q-title" id="s2title">¿Cuánto te<br>está costando<br><span class="accent">esta situación?</span></div>
+  <div class="q-sub" id="s2sub">Elegí la que más se acerca.</div>
+  <div class="dolor-opts" id="o2"></div>
+  <div class="nav">
+    <button class="btn-back" onclick="gt(1)">← Atrás</button>
+    <button class="btn-next" id="b2" disabled onclick="gt(3)">Siguiente →</button>
+  </div>
+</div>
+
+<!-- 3: MODELO PREFERIDO -->
+<div class="slide" id="s3">
+  <div class="q-tag">03 — El auto que querés</div>
+  <div class="q-title">¿Qué modelo<br><span class="accent">te enamora</span>?</div>
+  <div class="q-sub">No te preocupés por el precio todavía — eso lo resolvemos juntos.</div>
+  <div class="modelo-grid" id="o3">
+    <div class="modelo-card" onclick="pickModelo(this,'Fiat Mobi Trekking','mobi')">
+      <div class="mc-emoji">🏙️</div><div class="mc-nombre">Fiat Mobi</div>
+      <div class="mc-plan">Trekking · Plan 80/20</div>
+      <div class="mc-cuota">Desde $310.635/mes</div>
+      <div class="mc-desc">Compacto, económico, ideal para la ciudad</div>
+    </div>
+    <div class="modelo-card" onclick="pickModelo(this,'Fiat Fiorino','fiorino')">
+      <div class="mc-emoji">🚐</div><div class="mc-nombre">Fiat Fiorino</div>
+      <div class="mc-plan">Endurance · Plan 70/30</div>
+      <div class="mc-cuota">Desde $297.006/mes</div>
+      <div class="mc-desc">Furgón de trabajo, ideal para emprendedores</div>
+    </div>
+    <div class="modelo-card" onclick="pickModelo(this,'Fiat Argo','argo')">
+      <div class="mc-emoji">🚗</div><div class="mc-nombre">Fiat Argo</div>
+      <div class="mc-plan">Drive 1.3 · Plan 70/30</div>
+      <div class="mc-cuota">Desde $301.744/mes</div>
+      <div class="mc-desc">Hatchback dinámico, moderno y accesible</div>
+      <div class="opt-tag">Popular</div>
+    </div>
+    <div class="modelo-card" onclick="pickModelo(this,'Fiat Cronos','cronos_70')">
+      <div class="mc-emoji">🚘</div><div class="mc-nombre">Fiat Cronos</div>
+      <div class="mc-plan">Drive 1.3 Pack Plus · Plan 70/30</div>
+      <div class="mc-cuota">Desde $375.139/mes</div>
+      <div class="mc-desc">Sedán familiar, espacio y confort premium</div>
+      <div class="opt-tag">Más vendido</div>
+    </div>
+    <div class="modelo-card" onclick="pickModelo(this,'Fiat Pulse','pulse')">
+      <div class="mc-emoji">⚡</div><div class="mc-nombre">Fiat Pulse</div>
+      <div class="mc-plan">Drive 1.3 MT · Plan 70/30</div>
+      <div class="mc-cuota">Desde $371.610/mes</div>
+      <div class="mc-desc">SUV urbana con la última tecnología</div>
+      <div class="opt-tag">La más deseada</div>
+    </div>
+    <div class="modelo-card" onclick="pickModelo(this,'Fiat Strada','strada')">
+      <div class="mc-emoji">🛻</div><div class="mc-nombre">Fiat Strada</div>
+      <div class="mc-plan">Freedom CD 1.3 · Plan 70/30</div>
+      <div class="mc-cuota">Desde $380.180/mes</div>
+      <div class="mc-desc">Pick-up versátil, para trabajo y aventura</div>
+    </div>
+    <div class="modelo-card" onclick="pickModelo(this,'Fiat Fastback','fastback')">
+      <div class="mc-emoji">🏎️</div><div class="mc-nombre">Fiat Fastback</div>
+      <div class="mc-plan">Turbo 270 AT6 · Plan 70/30</div>
+      <div class="mc-cuota">Desde $480.390/mes</div>
+      <div class="mc-desc">SUV coupé premium, diseño único y potente</div>
+      <div class="opt-tag">Premium</div>
+    </div>
+    <div class="modelo-card" onclick="pickModelo(this,'Fiat Toro','toro')">
+      <div class="mc-emoji">🦁</div><div class="mc-nombre">Fiat Toro</div>
+      <div class="mc-plan">Freedom 1.3 AT6 · Plan 70/30</div>
+      <div class="mc-cuota">Desde $500.960/mes</div>
+      <div class="mc-desc">Pick-up grande con potencia y tecnología</div>
+    </div>
+    <div class="modelo-card" onclick="pickModelo(this,'Fiat Titano','titano')">
+      <div class="mc-emoji">👑</div><div class="mc-nombre">Fiat Titano</div>
+      <div class="mc-plan">Freedom MT · Plan 60/40</div>
+      <div class="mc-cuota">Desde $512.058/mes</div>
+      <div class="mc-desc">La pick-up más grande de Fiat, todo terreno</div>
+    </div>
+    <div class="modelo-card" onclick="pickModelo(this,'No lo definí','nodef')">
+      <div class="mc-emoji">💬</div><div class="mc-nombre">Todavía no lo sé</div>
+      <div class="mc-plan">Cristian te asesora</div>
+      <div class="mc-cuota">Hay opciones para todo presupuesto</div>
+      <div class="mc-desc">Te ayudo a encontrar el ideal</div>
+    </div>
+  </div>
+  <div class="nav">
+    <button class="btn-back" onclick="gt(2)">← Atrás</button>
+    <button class="btn-next" id="b3" disabled onclick="gt(4)">Siguiente →</button>
+  </div>
+</div>
+
+<!-- 4: PRESUPUESTO CON LIVE REC -->
+<div class="slide" id="s4">
+  <div class="q-tag">04 — Tu presupuesto</div>
+  <div class="q-title">¿Cuánto podés<br>poner por mes?</div>
+  <div class="q-sub">Mové el slider — te muestro en tiempo real qué auto podés tener.<br><strong>0% de interés.</strong> Cada peso va al precio del auto.</div>
+  <div class="range-val" id="rangeVal">$350.000</div>
+  <div class="range-sub">por mes · sin interés</div>
+  <input type="range" id="q4range" min="200000" max="650000" step="10000" value="350000" oninput="upRange4(this.value)">
+  <div class="range-labels"><span>$200k</span><span>$300k</span><span>$400k</span><span>$500k</span><span>$650k+</span></div>
+  <div id="liveRec"></div>
+  <div class="nav">
+    <button class="btn-back" onclick="gt(3)">← Atrás</button>
+    <button class="btn-next" onclick="ans.presupuesto=parseInt(document.getElementById('q4range').value);buildRec();gt(5)">Ver mi plan →</button>
+  </div>
+</div>
+
+<!-- 5: RECOMENDACIÓN INTELIGENTE -->
+<div class="slide" id="s5">
+  <div class="q-tag">05 — Tu plan personalizado</div>
+  <div class="q-title" id="s5title">Basado en tu perfil,<br><span class="accent">esta es tu<br>mejor opción</span></div>
+  <div id="recCardArea"></div>
+  <div class="nav">
+    <button class="btn-back" onclick="gt(4)">← Cambiar presupuesto</button>
+    <button class="btn-next" onclick="gt(6)" id="b5">Este lo quiero →</button>
+  </div>
+</div>
+
+<!-- 6: URGENCIA -->
+<div class="slide" id="s6">
+  <div class="q-tag">06 — Tu timing</div>
+  <div class="q-title">¿Cuándo querés<br><span class="accent">arrancar</span>?</div>
+  <div class="q-sub">Sin presión — pero hay cupos limitados con adjudicación garantizada este mes.</div>
+  <div class="opts" id="o6">
+    <div class="opt" onclick="pick('o6',this,'cuandoInicia','Ya mismo — quiero iniciar hoy','b6')"><div class="opt-ic">🚀</div><div class="opt-lbl">Ya mismo</div><div class="opt-dsc">Quiero arrancar esta semana</div></div>
+    <div class="opt" onclick="pick('o6',this,'cuandoInicia','Este mes','b6')"><div class="opt-ic">📆</div><div class="opt-lbl">Este mes</div><div class="opt-dsc">Próximos 30 días</div></div>
+    <div class="opt" onclick="pick('o6',this,'cuandoInicia','En 2 a 3 meses','b6')"><div class="opt-ic">🗓️</div><div class="opt-lbl">En 2 a 3 meses</div><div class="opt-dsc">Ordenando mis finanzas</div></div>
+    <div class="opt" onclick="pick('o6',this,'cuandoInicia','Más adelante','b6')"><div class="opt-ic">⏳</div><div class="opt-lbl">Más adelante</div><div class="opt-dsc">Todavía evaluando</div></div>
+  </div>
+  <div class="nav">
+    <button class="btn-back" onclick="gt(5)">← Atrás</button>
+    <button class="btn-next" id="b6" disabled onclick="gt(7)">Siguiente →</button>
+  </div>
+</div>
+
+<!-- 7: OBJECIONES -->
+<div class="slide" id="s7">
+  <div class="q-tag">07 — Tus dudas</div>
+  <div class="q-title">¿Qué te frena<br><span class="accent">en este momento</span>?</div>
+  <div class="q-sub">Podés elegir varias. Ser honesto me permite preparar la propuesta exacta para vos.</div>
+  <div class="opts" id="o7">
+    <div class="opt" onclick="multi(this,'objeciones','No entiendo bien el mecanismo del plan','b7')"><div class="opt-ic">❓</div><div class="opt-lbl">No entiendo el plan</div><div class="opt-dsc">Cómo funciona el mecanismo</div></div>
+    <div class="opt" onclick="multi(this,'objeciones','¿Es seguro? Tengo miedo a que sea una estafa','b7')"><div class="opt-ic">🔒</div><div class="opt-lbl">¿Es seguro?</div><div class="opt-dsc">Desconfianza en el sistema</div></div>
+    <div class="opt" onclick="multi(this,'objeciones','No sé si el presupuesto me alcanza','b7')"><div class="opt-ic">💸</div><div class="opt-lbl">No sé si me alcanza</div><div class="opt-dsc">Dudas sobre el presupuesto</div></div>
+    <div class="opt" onclick="multi(this,'objeciones','¿Cuánto tiempo tarda la entrega?','b7')"><div class="opt-ic">📦</div><div class="opt-lbl">¿Cuánto tarda?</div><div class="opt-dsc">El tiempo de espera me preocupa</div></div>
+    <div class="opt" onclick="multi(this,'objeciones','Prefiero un crédito bancario','b7')"><div class="opt-ic">🏦</div><div class="opt-lbl">Prefiero el banco</div><div class="opt-dsc">Estoy más acostumbrado</div></div>
+    <div class="opt" onclick="multi(this,'objeciones','Ninguna — quiero avanzar ya','b7')"><div class="opt-ic">✅</div><div class="opt-lbl">Sin dudas — avanzo ya</div><div class="opt-dsc">Ya estoy convencido</div></div>
+  </div>
+  <div class="nav">
+    <button class="btn-back" onclick="gt(6)">← Atrás</button>
+    <button class="btn-next" id="b7" disabled onclick="gt(8)">Siguiente →</button>
+  </div>
+</div>
+
+<!-- 8: GARANTÍA (trust builder) -->
+<div class="slide" id="s8">
+  <div class="q-tag">08 — Algo importante antes de seguir</div>
+  <div class="q-title">¿Sabías que tu<br>adjudicación está<br><span class="accent">100% garantizada</span>?</div>
+  <div class="q-sub">Con el plan Fiat Fadua no dependés de ningún sorteo ni banco.</div>
+  <div class="garantia-hero">
+    <div class="garantia-badge">✅ ADJUDICACIÓN PACTADA</div>
+    <div class="garantia-titulo">No hay sorteo.<br>No hay suerte.<br>Hay un contrato.</div>
+    <div class="garantia-desc">Al suscribirte, tu cupo de adjudicación queda <strong style="color:#ddd">reservado por contrato oficial registrado ante la IGJ</strong>. Fiat Argentina garantiza que llegás al auto. No dependés de que te salga un número.</div>
+  </div>
+  <div class="vs-table" id="vsTable">
+    <div class="vs-header">
+      <div class="vs-h lbl">¿Qué querés?</div>
+      <div class="vs-h plan">Plan Fadua</div>
+      <div class="vs-h banco">Crédito banco</div>
+    </div>
+    <div class="vs-row"><span class="lbl">Interés total</span><span class="plan-val">0%</span><span class="banco-val">80-120%</span></div>
+    <div class="vs-row"><span class="lbl">Cuota mensual est.</span><span class="plan-val" id="vsplan">—</span><span class="banco-val" id="vsbanco">—</span></div>
+    <div class="vs-row"><span class="lbl">Total que pagás</span><span class="plan-val" id="vstotalplan">Precio del auto</span><span class="banco-val" id="vstotalbanco">—</span></div>
+    <div class="vs-row"><span class="lbl">Requiere</span><span class="plan-val">Solo tu DNI</span><span class="banco-val">Recibos, garantías, historial</span></div>
+    <div class="vs-row"><span class="lbl">Adjudicación</span><span class="plan-val">✅ Garantizada</span><span class="banco-val">❌ No aplica</span></div>
+  </div>
+  <div class="nav">
+    <button class="btn-back" onclick="gt(7)">← Atrás</button>
+    <button class="btn-next" onclick="gt(9)">Entendido, sigo →</button>
+  </div>
+</div>
+
+<!-- 9: ESPEJO PROFUNDO -->
+<div class="slide" id="s9">
+  <div class="q-tag">09 — Visualización</div>
+  <div class="q-title" id="s9title">Imaginá que en<br>pocos meses tenés<br>las llaves en la mano.<br><span class="accent">¿Qué cambia?</span></div>
+  <div class="q-sub" id="s9sub">Elegí el que más te representa.</div>
+  <div class="espejo-opts" id="o9"></div>
+  <div class="nav">
+    <button class="btn-back" onclick="gt(8)">← Atrás</button>
+    <button class="btn-next" id="b9" disabled onclick="gt(10)">Siguiente →</button>
+  </div>
+</div>
+
+<!-- 10: COMPETENCIA -->
+<div class="slide" id="s10">
+  <div class="q-tag">10 — Comparación</div>
+  <div class="q-title">¿Ya consultaste<br><span class="accent">en otro lado</span>?</div>
+  <div class="q-sub">Sin problema — me ayuda para darte la mejor propuesta diferencial.</div>
+  <div class="opts" id="o10">
+    <div class="opt" onclick="pick('o10',this,'yaConsulto','Sí, en otra concesionaria Fiat','b10')"><div class="opt-ic">🚘</div><div class="opt-lbl">Sí, otra Fiat</div><div class="opt-dsc">Otra concesionaria oficial</div></div>
+    <div class="opt" onclick="pick('o10',this,'yaConsulto','Sí, otra marca (VW, Chevrolet, etc.)','b10')"><div class="opt-ic">🔀</div><div class="opt-lbl">Otra marca</div><div class="opt-dsc">VW, Chevrolet, Toyota…</div></div>
+    <div class="opt" onclick="pick('o10',this,'yaConsulto','Sí, un banco o financiera','b10')"><div class="opt-ic">🏦</div><div class="opt-lbl">Un banco</div><div class="opt-dsc">Crédito o préstamo</div></div>
+    <div class="opt" onclick="pick('o10',this,'yaConsulto','No — Cristian es mi primera consulta','b10')"><div class="opt-ic">⭐</div><div class="opt-lbl">Primera consulta</div><div class="opt-dsc">Llegué directo acá</div></div>
+  </div>
+  <div class="nav">
+    <button class="btn-back" onclick="gt(9)">← Atrás</button>
+    <button class="btn-next" id="b10" disabled onclick="gt(11)">Siguiente →</button>
+  </div>
+</div>
+
+<!-- 11: CONTACTO -->
+<div class="slide" id="s11">
+  <div class="q-tag">11 — Último paso</div>
+  <div class="q-title">¡Ya<br><span class="accent">terminaste</span>!</div>
+  <div class="q-sub" id="s11sub">Completá tus datos y Cristian te manda tu propuesta personalizada con los números exactos de este mes. <span style="color:var(--gold)">🎁 Incluye beneficios exclusivos por participar.</span></div>
+  <div class="field-group">
+    <div><div class="field-lbl">Nombre y apellido</div><input type="text" id="qNombre" placeholder="Ej: Lucía Rodríguez" oninput="chkContact()"></div>
+    <div><div class="field-lbl">WhatsApp (con código de área)</div><input type="tel" id="qTel" placeholder="Ej: 387 555-1234" oninput="chkContact()"></div>
+    <div><div class="field-lbl">¿Cuándo preferís que te contacte Cristian?</div>
+      <select id="qHorario" onchange="chkContact()">
+        <option value="">Elegí un horario...</option>
+        <option>Mañana (8 a 12hs)</option>
+        <option>Mediodía (12 a 15hs)</option>
+        <option>Tarde (15 a 20hs)</option>
+        <option>Cualquier horario</option>
+      </select>
+    </div>
+    <div><div class="field-lbl">¿Algo que quieras agregar? (opcional)</div>
+      <textarea id="qComentario" placeholder="Ej: Me interesa el Cronos pero quiero saber si puedo ingresar el Onix como parte de pago..."></textarea>
+    </div>
+  </div>
+  <div class="nav">
+    <button class="btn-back" onclick="gt(10)">← Atrás</button>
+    <button class="btn-next" id="b11" disabled onclick="showThanks()">Ver mi propuesta 🎁</button>
+  </div>
+</div>
+
+</div><!-- /slides -->
+
+<!-- PANTALLA GRACIAS -->
+<div class="thanks-screen" id="thanksScreen">
+  <div class="confetti-row">🎉🏆🎉</div>
+  <div class="thanks-title"><span id="leadNombre">¡Felicitaciones</span>,<br>tu propuesta<br><span class="acc">exclusiva</span><br>está lista!</div>
+  <p class="thanks-espejo" id="thanksEspejo"></p>
+  <p class="thanks-sub">Cristian revisó tu perfil y reservó estos beneficios para vos.</p>
+
+  <div class="urgency-bar">
+    <div class="urgency-dot"></div>
+    <div style="flex:1"><div class="urgency-txt">Cupos disponibles este mes</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">Con adjudicación garantizada incluida</div></div>
+    <div class="urgency-cnt" id="cupos">3</div>
+  </div>
+
+  <div class="save-ok" id="saveOk">
+    <div style="width:8px;height:8px;background:var(--green);border-radius:50%;"></div>
+    <span>Perfil guardado correctamente ✓</span>
+  </div>
+
+  <div class="prize-card">
+    <div class="prize-tag">🏅 Beneficios exclusivos por participar</div>
+    <div class="prize-titulo">TU PAQUETE PREFERENCIAL · FIAT FADUA</div>
+    <div class="prize-list">
+      <div class="prize-item"><div class="pi-ic">🔑</div><div><div class="pi-name">Cupo de adjudicación asegurada</div><div class="pi-desc">Acceso prioritario al cupo del mes — no esperás al sorteo general</div></div></div>
+      <div class="prize-item"><div class="pi-ic">💯</div><div><div class="pi-name">Suscripción bonificada al 100%</div><div class="pi-desc">Tu primera cuota bonificada completamente — arrancás sin gastar de más</div></div></div>
+      <div class="prize-item"><div class="pi-ic">🛡️</div><div><div class="pi-name">Kit de seguridad incluido</div><div class="pi-desc">Kit oficial Fiat de regalo al momento de la entrega de tu 0km</div></div></div>
+      <div class="prize-item"><div class="pi-ic">🔧</div><div><div class="pi-name">1er service oficial gratis</div><div class="pi-desc">Mano de obra y materiales incluidos — tranquilidad desde el primer día</div></div></div>
+    </div>
+  </div>
+
+  <a id="waBtn" href="#" target="_blank" class="thanks-cta">📲 Recibir mi propuesta personalizada →</a>
+  <p class="thanks-small">Cristian te contacta por WhatsApp al número que dejaste.<br>Beneficios sujetos a disponibilidad de cupos del mes.</p>
+
+  <!-- ADMIN TRIGGER (toca 5 veces el footer) -->
+  <div class="admin-sec" id="adminSec">
+    <div class="adm-row">
+      <input class="adm-inp" type="password" id="adminPwd" placeholder="Código Cristian..." onkeydown="if(event.key==='Enter')chkPwd()">
+      <button class="adm-btn" onclick="chkPwd()">Acceder</button>
+    </div>
+    <p class="adm-err" id="adminErr">Código incorrecto.</p>
+  </div>
+
+  <div id="adminPanel" style="display:none;margin-top:16px;">
+    <div class="est-banner" id="estBanner">
+      <div class="eb-emoji" id="ebEmoji">🔥</div>
+      <div><div class="eb-ttl" id="ebTtl">LEAD CALIENTE</div><div class="eb-sc" id="ebSc">Puntaje: —</div></div>
+    </div>
+    <div class="obj-box"><h4>🎯 Objeciones — guión Cristian</h4><div id="objList"></div></div>
+    <div class="vid-box"><h4>🎬 Video recomendado</h4><p id="vidRec">—</p></div>
+    <div class="lead-det">
+      <div class="ld-ttl">Perfil completo</div>
+      <div class="prow"><span class="pk">Nombre</span><span class="pv" id="r-nombre">—</span></div>
+      <div class="prow"><span class="pk">WhatsApp</span><span class="pv" id="r-tel">—</span></div>
+      <div class="prow"><span class="pk">Horario</span><span class="pv" id="r-horario">—</span></div>
+      <div class="prow"><span class="pk">Perfil</span><span class="pv" id="r-perfil">—</span></div>
+      <div class="prow"><span class="pk">Dolor detectado</span><span class="pv" id="r-dolor">—</span></div>
+      <div class="prow"><span class="pk">Modelo preferido</span><span class="pv" id="r-modelo">—</span></div>
+      <div class="prow"><span class="pk">Modelo recomendado</span><span class="pv" id="r-rec">—</span></div>
+      <div class="prow"><span class="pk">Presupuesto/mes</span><span class="pv" id="r-presup">—</span></div>
+      <div class="prow"><span class="pk">Cuándo inicia</span><span class="pv" id="r-inicio">—</span></div>
+      <div class="prow"><span class="pk">Objeciones</span><span class="pv" id="r-obj">—</span></div>
+      <div class="prow"><span class="pk">Ya consultó</span><span class="pv" id="r-comp">—</span></div>
+      <div class="prow"><span class="pk">Sueño/espejo</span><span class="pv" id="r-sueno">—</span></div>
+      <div class="prow"><span class="pk">Comentario</span><span class="pv" id="r-coment">—</span></div>
+      <div class="prow"><span class="pk">Estado</span><span class="pv" id="r-estado">—</span></div>
+      <div class="prow"><span class="pk">Puntaje</span><span class="pv" id="r-score">—</span></div>
+      <div class="prow"><span class="pk">Fecha</span><span class="pv" id="r-fecha">—</span></div>
+    </div>
+    <div class="panel">
+      <div class="ph">
+        <span class="ph-ttl">Todos los leads</span>
+        <button class="exp-btn" onclick="exportExcel()">⬇️ Excel</button>
+      </div>
+      <div class="cntrs">
+        <div class="cnt" style="background:rgba(255,77,77,.07);border:1px solid rgba(255,77,77,.18);">
+          <div class="cnt-n" style="color:var(--hot)" id="cHot">0</div><div class="cnt-l">🔥 Caliente</div>
+        </div>
+        <div class="cnt" style="background:rgba(255,180,0,.06);border:1px solid rgba(255,180,0,.18);">
+          <div class="cnt-n" style="color:var(--med)" id="cMed">0</div><div class="cnt-l">🟡 Medio</div>
+        </div>
+        <div class="cnt" style="background:rgba(80,140,255,.06);border:1px solid rgba(80,140,255,.18);">
+          <div class="cnt-n" style="color:var(--cold)" id="cCold">0</div><div class="cnt-l">🔵 Frío</div>
+        </div>
+      </div>
+      <div class="tbl-w">
+        <table>
+          <thead><tr><th>#</th><th>Nombre</th><th>Tel</th><th>Estado</th><th>Pts</th><th>Modelo Rec</th><th>Pref</th><th>Presup</th><th>Perfil</th><th>Inicia</th><th>Fecha</th></tr></thead>
+          <tbody id="tblBody"></tbody>
+        </table>
+        <p id="noLeads" style="text-align:center;color:var(--muted);font-size:12px;padding:16px 0;">Sin leads todavía.</p>
+      </div>
+    </div>
+    <button class="nuevo-btn" onclick="nuevoLead()">➕ Nuevo lead</button>
+  </div>
+
+  <p id="adminTrigger" onclick="trigAdm()" style="font-size:10px;color:#111;text-align:center;margin-top:18px;cursor:default;user-select:none;padding:12px 0;">
+    © Cristian Eguizabal · Fiat Fadua · Salta Capital
+  </p>
+</div>
+
+</div><!-- /wrap -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+// ══════════════════════════════════════════
+// CONFIG
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbw2VrJ1OeX2AR-H__ZQA3jl7avg2MGm0d12FLdPqLQo2nfcyzSyv2S3aEXOZmVKhq1HXA/exec';
+const WA = '5493875635024';
+const ADMIN_PWD = 'fadua2025';
+const STEPS = 11;
+
+// ══ PLANES (datos reales de PDFs) ══
+const PLANES = [
+  {id:'fiorino',  n:'Fiat Fiorino',        plan:'70/30', emoji:'🚐', tipo:'comercial', c1:580000,  c2_12:393070, c13:297006, promo:290000,  adj:'Cuota 2, 4, 6 y 12', flete:1500000, desc:'Para tu negocio'},
+  {id:'argo',     n:'Fiat Argo',           plan:'70/30', emoji:'🚗', tipo:'hatch',    c1:600000,  c2_12:399341, c13:301744, promo:250000,  adj:'Cuota 2, 4, 6 y 12', flete:1500000, desc:'El más popular'},
+  {id:'mobi',     n:'Fiat Mobi Trekking',  plan:'80/20', emoji:'🏙️', tipo:'city',     c1:480000,  c2_12:327313, c13:310635, promo:240000,  adj:'Cuota 6 y 12',        flete:1400000, desc:'Compacto urbano'},
+  {id:'pulse',    n:'Fiat Pulse',          plan:'70/30', emoji:'⚡', tipo:'suv',      c1:696000,  c2_12:491805, c13:371610, promo:348000,  adj:'Cuota 2, 4, 6 y 12', flete:1600000, desc:'La más deseada'},
+  {id:'cronos_70',n:'Fiat Cronos',         plan:'70/30', emoji:'🚘', tipo:'sedan',    c1:696000,  c2_12:465208, c13:375139, promo:320000,  adj:'Cuota 2, 4, 9 y 12', flete:1600000, desc:'Más vendido'},
+  {id:'strada',   n:'Fiat Strada',         plan:'70/30', emoji:'🛻', tipo:'pickup',   c1:740000,  c2_12:503146, c13:380180, promo:370000,  adj:'Cuota 2, 6 y 12',    flete:1600000, desc:'Fuerza real'},
+  {id:'cronos_80',n:'Fiat Cronos 80/20',   plan:'80/20', emoji:'🚘', tipo:'sedan',    c1:796000,  c2_12:518597, c13:424796, promo:370000,  adj:'Cuota 2, 6, 9 y 12', flete:1600000, desc:'Adj. más rápida'},
+  {id:'cronos_90',n:'Fiat Cronos 90/10',   plan:'90/10', emoji:'🚘', tipo:'sedan',    c1:940000,  c2_12:595790, c13:474454, promo:450000,  adj:'Cuota 2 y 10',        flete:1600000, desc:'Entrega express'},
+  {id:'fastback', n:'Fiat Fastback',       plan:'70/30', emoji:'🏎️', tipo:'suv_coupe',c1:770500,  c2_12:544376, c13:480390, promo:385000,  adj:'Cuota 2, 4, 6 y 12', flete:2000000, desc:'SUV premium'},
+  {id:'toro',     n:'Fiat Toro',           plan:'70/30', emoji:'🦁', tipo:'pickup',   c1:840000,  c2_12:598493, c13:500960, promo:420000,  adj:'Cuota 2, 4, 6 y 12', flete:2100000, desc:'Potencia total'},
+  {id:'titano',   n:'Fiat Titano',         plan:'60/40', emoji:'👑', tipo:'pickup_xl',c1:675000,  c2_12:606883, c13:512058, promo:450000,  adj:'Cuota 2, 4, 6 y 12', flete:2700000, desc:'El rey del camino'},
+];
+
+// ══ DOLOR por perfil ══
+const DOLORES = {
+  sin_auto:[
+    {ic:'🚌',l:'Gasto una fortuna en remises y colectivos',s:'El dinero que gastás en movilidad en un mes podrías estar pagando el plan'},
+    {ic:'⏰',l:'Pierdo horas esperando transporte o pidiendo favores',s:'Tu tiempo vale — y lo estás regalando'},
+    {ic:'😓',l:'Me quedé sin poder ir a lugares por no tener auto',s:'Oportunidades perdidas, citas canceladas, compromisos incumplidos'},
+    {ic:'🙁',l:'Dependo de otros y me da vergüenza',s:'La independencia de moverte cuando quieras, como quieras'},
+  ],
+  auto_viejo:[
+    {ic:'💸',l:'El mecánico me cobra más que una cuota del plan',s:'Cada "revisión" es plata que podrías estar invirtiendo en tu 0km'},
+    {ic:'😰',l:'Cada viaje largo es una apuesta — puede romperse en la ruta',s:'El miedo constante de quedarte varado consume más energía de la que imaginás'},
+    {ic:'⛽',l:'Gasto el doble de nafta que un auto moderno',s:'Los motores viejos consumen hasta 40% más — eso es plata todos los meses'},
+    {ic:'😔',l:'Me da vergüenza llegar con este auto a ciertos lugares',s:'Tu auto dice algo de vos — y vos merecés uno que te represente'},
+  ],
+  familia:[
+    {ic:'😤',l:'Vamos apretados y los chicos se pelean en el asiento',s:'Un viaje de 2hs con la familia apretada es agotador para todos'},
+    {ic:'🏕️',l:'No podemos salir de vacaciones con todo lo que necesitamos',s:'Equipaje, sillas de niños, mascotas — necesitás espacio real'},
+    {ic:'😟',l:'Preocupación constante por la seguridad de mis hijos',s:'Un auto 0km tiene airbags, frenos ABS y asistentes que el auto viejo no tiene'},
+    {ic:'🛒',l:'No entra la compra del supermercado grande',s:'Baúl chico = dos viajes = doble tiempo = doble estrés'},
+  ],
+  joven:[
+    {ic:'🎯',l:'Me perdí oportunidades de trabajo por no tener movilidad propia',s:'Cuántas entrevistas, clientes o trabajos extra dejaste ir'},
+    {ic:'😞',l:'Salgo siempre dependiendo de que alguien me lleve o busque',s:'La libertad de arrancar cuando querés no tiene precio'},
+    {ic:'💪',l:'Quiero demostrarme que puedo tener mi primer 0km propio',s:'Es más que un auto — es el primer logro grande hecho con esfuerzo propio'},
+    {ic:'📱',l:'Veo autos 0km en redes y sé que puedo acceder — solo falta el cómo',s:'El plan Fiat es exactamente el cómo que estabas buscando'},
+  ],
+  banco:[
+    {ic:'😡',l:'El banco me pidió garantías que no tengo para acceder a la cuota',s:'DNI, recibos, garante — para el plan Fiat solo necesitás tu DNI'},
+    {ic:'🤯',l:'La cuota del banco era el doble de lo que puedo pagar',s:'Con el mismo auto, el banco te cobra entre 80% y 120% de interés extra'},
+    {ic:'📉',l:'Me ofrecían el auto a precio de lista pero pagaba casi el doble',s:'Con el plan Fadua pagás exactamente el precio del auto — sin un peso más'},
+    {ic:'😤',l:'Me hacían sentir que no calificaba — proceso humillante',s:'Acá la conversación es diferente. Cristian trabaja para que llegues al auto'},
+  ],
+  upgrade:[
+    {ic:'🤦',l:'Mi auto no tiene ninguna de las tecnologías que quiero',s:'CarPlay, pantalla táctil, cámara trasera — son funciones que ya existen para vos'},
+    {ic:'🔄',l:'Ya sé que con lo que vale el mío puedo financiar el cambio',s:'Tu auto actual puede ser parte de pago para reducir cuotas desde el primer mes'},
+    {ic:'✨',l:'El diseño de mi auto ya no me emociona cuando lo veo',s:'El entusiasmo de arrancar un auto que te gusta vale más de lo que pensás'},
+    {ic:'📊',l:'Comparé y el plan Fiat es mucho más conveniente que vender y comprar usado',s:'0km con garantía, sin sorpresas mecánicas, con plan de pago claro'},
+  ],
+};
+
+// ══ ESPEJOS por perfil + modelo ══
+const ESPEJOS = {
+  sin_auto:[
+    {ic:'🙌',l:'Le decís no al remisero para siempre',s:'Ese momento donde apretás el botón para arrancar tu auto propio por primera vez'},
+    {ic:'🗓️',l:'Organizás tu día SIN depender de los horarios de otros',s:'La reunión, el gym, el mandado — vos elegís cuándo y cómo'},
+    {ic:'📸',l:'Le mandás la foto de las llaves a tu familia',s:'"Ya lo hice" — tres palabras que valen todo el esfuerzo'},
+    {ic:'🌅',l:'Primer viaje solo, a donde vos quieras, cuando vos querés',s:'La sensación de libertad total que no tiene descripción'},
+  ],
+  auto_viejo:[
+    {ic:'😌',l:'Manejás al trabajo SIN miedo a que se rompa en la ruta',s:'Esa tranquilidad de saber que llegás — sin rezar en cada semáforo'},
+    {ic:'💰',l:'El mecánico ya no aparece en tu WhatsApp',s:'El dinero que gastabas en arreglos ahora va a algo que vale'},
+    {ic:'🏆',l:'Llegás a una reunión importante en tu 0km reluciente',s:'La primera impresión ya no la arruina un auto viejo y sucio'},
+    {ic:'🛣️',l:'El primer viaje largo sin revisar el agua, el aceite y los neumáticos',s:'Suena al auto, ponés música y arrancás — sin lista de verificación'},
+  ],
+  familia:[
+    {ic:'🧒',l:'La cara de tus hijos cuando ven el auto nuevo en la puerta',s:'Esa alegría no tiene precio y se recuerda para siempre'},
+    {ic:'🏕️',l:'Primer viaje de vacaciones sin preocuparte por el espacio',s:'Todo entra, todos van cómodos, nadie se pelea'},
+    {ic:'🛡️',l:'La tranquilidad de saber que tu familia viaja con todas las protecciones',s:'Airbags, ABS, asistentes de seguridad — para los que más querés'},
+    {ic:'🎒',l:'Llevás a los chicos al colegio en su propio 0km todos los días',s:'Esos 15 minutos diarios se convierten en un recuerdo'},
+  ],
+  joven:[
+    {ic:'🗝️',l:'Las llaves de tu primer 0km en la mano',s:'El primer logro grande que hiciste solo, sin que nadie te lo diera'},
+    {ic:'💼',l:'Llegás a trabajar o entrevistas en tu propio auto',s:'Ese cambio de actitud cuando sabés que llegaste en el tuyo'},
+    {ic:'🌙',l:'Salís de noche cuando querés, sin pedirle nada a nadie',s:'La independencia real — no la que te cuentan, la que vivís'},
+    {ic:'📱',l:'Subís la historia con las llaves del 0km',s:'"Sí, es mío" — y lo hiciste con el plan Fiat sin necesitar todo el dinero junto'},
+  ],
+  banco:[
+    {ic:'😤',l:'Demostraste que el banco no era la única opción',s:'Lograste lo mismo que te negaron — pero pagando el precio justo'},
+    {ic:'📊',l:'Calculás cuánto te ahorraste vs lo que te ofrecía el banco',s:'La diferencia es real y se siente en el bolsillo cada mes'},
+    {ic:'🚗',l:'Manejás el mismo auto que el banco te ofrecía al doble del precio',s:'Sin intereses, sin garantes, sin papelerío imposible'},
+    {ic:'🤝',l:'Le contás a un amigo que hay una opción mejor que el banco',s:'Cuando encontrás algo que funciona, lo compartís'},
+  ],
+  upgrade:[
+    {ic:'✨',l:'Abrís la puerta del nuevo y sentís ese olor a 0km',s:'No hay nada igual — y se siente cada vez que subís'},
+    {ic:'📱',l:'Conectás el teléfono y el auto te responde',s:'CarPlay, pantalla táctil, cámara — todo lo que querías en un auto'},
+    {ic:'🔄',l:'Entregaste el viejo y ya no pensás en él para nada',s:'El cambio fue la mejor decisión — lo confirmás el primer día'},
+    {ic:'🏎️',l:'Arrancás en el nuevo y sentís la diferencia en el primer semáforo',s:'Motor nuevo, suspensión nueva, todo nuevo — así se siente un upgrade real'},
+  ],
+};
+
+// ══ ESTADO ══
+let cur=0, leads=[], adminOk=false, tc=0, tt=null;
+let ans={objeciones:[], presupuesto:350000, perfil:'', perfilLabel:'', dolorLabel:'', modeloPref:'', modeloPrefId:'', modeloRec:'', modeloRecObj:null, espejo:'', comentario:'—'};
+
+// ══ NAV ══
+function gt(n){
+  document.getElementById('s'+cur).classList.remove('active');
+  document.getElementById('s'+n).classList.add('active');
+  cur=n; updProg();
+  if(n===2) buildDolor();
+  if(n===5) buildRecSlide();
+  if(n===8) buildVsTable();
+  if(n===9) buildEspejo();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function updProg(){
+  const p=Math.round((cur/STEPS)*100);
+  document.getElementById('progFill').style.width=p+'%';
+  document.getElementById('pctLbl').textContent=p+'%';
+  document.getElementById('stepLbl').textContent=cur===0?'Bienvenido':'Pregunta '+cur+' de '+STEPS;
+}
+function eb(id,ok){const b=document.getElementById(id);if(b)b.disabled=!ok;}
+
+// ══ PERFIL ══
+function setPerfil(el,id,label,dolorSub){
+  document.getElementById('o1').querySelectorAll('.dolor-opt').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+  ans.perfil=id; ans.perfilLabel=label;
+  eb('b1',true);
+}
+
+// ══ DOLOR ══
+function buildDolor(){
+  const list=DOLORES[ans.perfil]||DOLORES['sin_auto'];
+  const titles={
+    sin_auto:['¿Cuánto te cuesta<br>no tener auto<br><span class="accent">hoy</span>?','Elegí el que más duele.'],
+    auto_viejo:['¿Cuál de estas<br>es tu realidad<br><span class="accent">cotidiana</span>?','La que más se parece a lo que vivís.'],
+    familia:['¿Qué escena<br>describe mejor<br><span class="accent">tu día a día</span>?','La situación que más te pesa.'],
+    joven:['¿Qué te costó<br>no tener tu<br><span class="accent">auto propio</span>?','Elegí la que más te identifica.'],
+    banco:['¿Qué fue lo peor<br>de la experiencia<br><span class="accent">con el banco</span>?','Lo que más te frustró.'],
+    upgrade:['¿Cuál es el mayor<br>límite de tu<br><span class="accent">auto actual</span>?','Lo que más te molesta del día a día.'],
+  };
+  const t=titles[ans.perfil]||titles.sin_auto;
+  document.getElementById('s2title').innerHTML=t[0];
+  document.getElementById('s2sub').textContent=t[1];
+  const c=document.getElementById('o2');c.innerHTML='';
+  list.forEach((d,i)=>{
+    const div=document.createElement('div');
+    div.className='dolor-opt';
+    div.innerHTML=`<div class="dolor-ic">${d.ic}</div><div class="dolor-txt"><div class="dolor-lbl">${d.l}</div><div class="dolor-sub">${d.s}</div></div>`;
+    div.onclick=()=>{
+      c.querySelectorAll('.dolor-opt').forEach(e=>e.classList.remove('selected'));
+      div.classList.add('selected');
+      ans.dolorLabel=d.l;eb('b2',true);
+    };
+    c.appendChild(div);
+  });
+}
+
+// ══ MODELO ══
+function pickModelo(el,nombre,id){
+  document.getElementById('o3').querySelectorAll('.modelo-card').forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+  ans.modeloPref=nombre; ans.modeloPrefId=id; eb('b3',true);
+}
+
+// ══ SLIDER + LIVE REC ══
+function upRange4(v){
+  ans.presupuesto=parseInt(v);
+  document.getElementById('rangeVal').textContent='$'+parseInt(v).toLocaleString('es-AR');
+  renderLiveRec(parseInt(v));
+}
+upRange4(350000);
+
+function getMatchingPlanes(budget){
+  return PLANES.filter(p=>p.c13<=budget*1.08).sort((a,b)=>b.c13-a.c13);
+}
+function getBestPlane(budget,perfil,modeloPrefId){
+  const fits=getMatchingPlanes(budget);
+  if(!fits.length)return null;
+  // If preferred model fits, use it
+  if(modeloPrefId&&modeloPrefId!=='nodef'){
+    const pref=fits.find(p=>p.id===modeloPrefId);
+    if(pref)return pref;
+  }
+  // Profile preference
+  const profileOrder={
+    sin_auto:['argo','cronos_70','mobi','pulse'],
+    auto_viejo:['cronos_70','argo','pulse','strada'],
+    familia:['cronos_70','strada','pulse','mobi'],
+    joven:['argo','mobi','pulse','cronos_70'],
+    banco:['cronos_70','argo','pulse','cronos_80'],
+    upgrade:['pulse','fastback','toro','titano','cronos_70'],
+    comercial:['fiorino','strada','toro'],
+  };
+  const order=profileOrder[perfil]||profileOrder.sin_auto;
+  for(const pid of order){const p=fits.find(x=>x.id===pid);if(p)return p;}
+  return fits[0];
+}
+
+function renderLiveRec(budget){
+  const fits=getMatchingPlanes(budget);
+  const best=getBestPlane(budget,ans.perfil,ans.modeloPrefId);
+  const el=document.getElementById('liveRec');
+  if(!best){
+    const closest=PLANES.slice().sort((a,b)=>a.c13-b.c13)[0];
+    el.innerHTML=`<div class="live-rec-none"><p class="lrn-txt">Con $${budget.toLocaleString('es-AR')}/mes estás cerca. El más accesible es el <strong style="color:#ddd">${closest.n}</strong> desde <strong style="color:var(--red)">$${closest.c13.toLocaleString('es-AR')}/mes</strong>.<br>Subí un poco el slider o hablemos — Cristian tiene opciones.</p></div>`;
+    return;
+  }
+  const others=fits.filter(p=>p.id!==best.id).slice(0,3);
+  let othersHtml=others.map(p=>`<div class="lrb-otro" data-id="${p.id}" onclick="selAlt('${p.id}')">${p.emoji} ${p.n} · $${p.c13.toLocaleString('es-AR')}</div>`).join('');
+  el.innerHTML=`<div class="live-rec">
+    <div class="live-rec-header"><span>⭐ Tu mejor opción con ese presupuesto</span></div>
+    <div class="live-rec-body">
+      <div class="lrb-top">
+        <div><div class="lrb-nombre">${best.emoji} ${best.n}</div><div class="lrb-plan">Plan ${best.plan} · ${best.desc}</div></div>
+        <div class="lrb-cuota-box"><div class="lrb-cuota">$${best.c13.toLocaleString('es-AR')}</div><div class="lrb-cuota-lbl">/mes desde cuota 13</div></div>
+      </div>
+      <div class="lrb-adj">✅ Adjudicación garantizada · ${best.adj}</div>
+      ${others.length?`<div style="font-size:10px;color:var(--muted);margin-top:10px;letter-spacing:.5px;">TAMBIÉN ENTRAN EN TU PRESUPUESTO:</div><div class="lrb-otros">${othersHtml}</div>`:''}
+    </div>
+  </div>`;
+  ans.modeloRec=best.n; ans.modeloRecObj=best;
+}
+
+function selAlt(id){
+  document.querySelectorAll('.lrb-otro').forEach(e=>e.classList.remove('sel'));
+  const el=document.querySelector(`.lrb-otro[data-id="${id}"]`);
+  if(el)el.classList.add('sel');
+  const p=PLANES.find(x=>x.id===id);
+  if(p){ans.modeloRec=p.n;ans.modeloRecObj=p;}
+}
+
+// ══ REC SLIDE ══
+function buildRec(){
+  const budget=ans.presupuesto;
+  const best=getBestPlane(budget,ans.perfil,ans.modeloPrefId);
+  if(!best){ans.modeloRec='—';return;}
+  ans.modeloRec=best.n; ans.modeloRecObj=best;
+  const fits=getMatchingPlanes(budget).filter(p=>p.id!==best.id).slice(0,4);
+  const alts=fits.map(p=>`<button class="rec-alt-btn" onclick="selRec('${p.id}')">${p.emoji} ${p.n}</button>`).join('');
+  document.getElementById('recCardArea').innerHTML=`
+    <div class="rec-card">
+      <div class="rc-badge">⭐ Recomendado para tu perfil</div>
+      <div class="rc-emoji">${best.emoji}</div>
+      <div class="rc-nombre">${best.n}</div>
+      <div class="rc-plan">Plan ${best.plan} · ${best.desc}</div>
+      <div class="rc-stats">
+        <div class="rc-stat"><div class="rc-stat-val">$${best.c13.toLocaleString('es-AR')}</div><div class="rc-stat-lbl">Cuota mensual (desde cuota 13)</div></div>
+        <div class="rc-stat"><div class="rc-stat-val">$${best.promo.toLocaleString('es-AR')}</div><div class="rc-stat-lbl">Cuota 1 con promo (suscripción incl.)</div></div>
+        <div class="rc-stat"><div class="rc-stat-val">84</div><div class="rc-stat-lbl">Cuotas · 0% interés</div></div>
+        <div class="rc-stat"><div class="rc-stat-val">Solo DNI</div><div class="rc-stat-lbl">Sin recibos ni garantes</div></div>
+      </div>
+      <div class="rc-adj"><div class="rc-adj-ico">✅</div><div><div style="font-weight:700;">Adjudicación GARANTIZADA</div><div style="font-size:11px;opacity:.7;">${best.adj} · Sin depender de ningún sorteo</div></div></div>
+    </div>
+    ${fits.length?`<div class="rec-alt">¿Preferís ver otra opción dentro de tu presupuesto?</div><div class="rec-alts">${alts}</div>`:''}`;
+}
+function selRec(id){
+  const p=PLANES.find(x=>x.id===id);if(!p)return;
+  ans.modeloRec=p.n; ans.modeloRecObj=p;
+  buildRec(); // rebuild with new selection
+}
+
+// ══ VS TABLE ══
+function buildVsTable(){
+  const obj=ans.modeloRecObj;
+  if(!obj)return;
+  const cuota=obj.c13;
+  const bancoCuota=Math.round(cuota*1.9);
+  const totalPlan=cuota*84;
+  const totalBanco=Math.round(totalPlan*1.9);
+  document.getElementById('vsplan').textContent='$'+cuota.toLocaleString('es-AR')+'/mes';
+  document.getElementById('vsbanco').textContent='$'+bancoCuota.toLocaleString('es-AR')+'/mes aprox.';
+  document.getElementById('vstotalplan').textContent='$'+totalPlan.toLocaleString('es-AR')+' (precio del auto)';
+  document.getElementById('vstotalbanco').textContent='$'+totalBanco.toLocaleString('es-AR')+' (pagás casi el doble)';
+}
+
+// ══ ESPEJO ══
+function buildEspejo(){
+  const list=ESPEJOS[ans.perfil]||ESPEJOS.sin_auto;
+  const modelNombre=ans.modeloRec||'tu Fiat';
+  document.getElementById('s9title').innerHTML=`Imaginá que en<br>pocos meses tenés<br>las llaves del<br><span class="accent">${modelNombre}</span>.<br>¿Qué cambia?`;
+  const c=document.getElementById('o9');c.innerHTML='';
+  list.forEach(e=>{
+    const div=document.createElement('div');
+    div.className='esp-opt';
+    div.innerHTML=`<span class="esp-ic">${e.ic}</span><div class="esp-lbl">${e.l}</div><div class="esp-sub">${e.s}</div>`;
+    div.onclick=()=>{
+      c.querySelectorAll('.esp-opt').forEach(x=>x.classList.remove('selected'));
+      div.classList.add('selected');ans.espejo=e.l;eb('b9',true);
+    };
+    c.appendChild(div);
+  });
+}
+
+// ══ INTERACCIONES ══
+function pick(grpId,el,key,val,btnId){
+  document.getElementById(grpId).querySelectorAll('.opt').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');ans[key]=val;eb(btnId,true);
+}
+function multi(el,key,val,btnId){
+  el.classList.toggle('selected');
+  if(!Array.isArray(ans[key]))ans[key]=[];
+  if(el.classList.contains('selected'))ans[key].push(val);
+  else ans[key]=ans[key].filter(v=>v!==val);
+  eb(btnId,ans[key].length>0);
+}
+function chkContact(){
+  const n=document.getElementById('qNombre').value.trim();
+  const t=document.getElementById('qTel').value.trim();
+  const h=document.getElementById('qHorario').value;
+  ans.nombre=n;ans.telefono=t;ans.horario=h;
+  eb('b11',!!(n&&t&&h));
+}
+
+// ══ SCORING ══
+function calcScore(){
+  let s=0;
+  if(ans.cuandoInicia){
+    if(ans.cuandoInicia.includes('Ya mismo'))s+=30;
+    else if(ans.cuandoInicia.includes('Este mes'))s+=22;
+    else if(ans.cuandoInicia.includes('2 a 3'))s+=14;
+    else s+=5;
+  }
+  const p=ans.presupuesto||0;
+  if(p>=500000)s+=25;else if(p>=350000)s+=20;else if(p>=250000)s+=14;else s+=6;
+  if(ans.modeloRecObj)s+=10;
+  const ob=ans.objeciones||[];
+  if(ob.includes('Ninguna — quiero avanzar ya'))s+=15;
+  else if(ob.length===0)s+=8;else s+=2;
+  if(ans.yaConsulto&&ans.yaConsulto.includes('primera'))s+=10;else s+=3;
+  if(ans.perfil==='banco')s+=5;// ya comparó y eligió el plan
+  return Math.min(s,100);
+}
+function getEstado(s){if(s>=65)return'Caliente';if(s>=38)return'Medio';return'Frío';}
+
+// ══ GUIONES ══
+const OBJ_SCRIPTS={
+  'No entiendo bien el mecanismo del plan':{t:'No entiende el mecanismo',s:'Explicar: cuota mensual → acumulación → adjudicación pactada por contrato → entrega del 0km. Usar analogía: "Es como una caja de ahorro donde el premio es el auto." Enviar video explicativo de Cristian.'},
+  '¿Es seguro? Tengo miedo a que sea una estafa':{t:'Desconfianza / miedo a estafa',s:'Mostrar respaldo: plan oficial Fiat Argentina, contrato registrado ante IGJ, miles de adjudicados en Salta. Invitar a la concesionaria Fadua (San Luis 680). Compartir testimonios reales de clientes salteños.'},
+  'No sé si el presupuesto me alcanza':{t:'Duda presupuestaria',s:'Trabajar con el número que tiene. Simular en tiempo real: "Con $X/mes en X meses llegás al Cronos." Recordar que la cuota se ajusta al valor del auto — no hay un mínimo imposible.'},
+  '¿Cuánto tiempo tarda la entrega?':{t:'Incertidumbre en el tiempo de entrega',s:'Explicar el sistema de adjudicación garantizada en cuotas 2/4/6/12 según el plan. El lead no depende del sorteo. Mostrar ejemplos de adjudicados en Salta en menos de 6 meses.'},
+  'Prefiero un crédito bancario':{t:'Prefiere crédito bancario',s:'Comparar: banco cobra 80-120% de interés. Plan Fadua: 0%. "Por el mismo Cronos, el banco te hace pagar casi el doble." Usar números concretos del modelo que eligió el lead.'},
+  'Ninguna — quiero avanzar ya':{t:'✅ SIN OBJECIONES — LEAD LISTO',s:'IR DIRECTO AL CIERRE. Pedir DNI, confirmar dirección y agendar visita a Fadua hoy o mañana.'},
+};
+const VIDEO_SC={
+  'Caliente':'Enviar TESTIMONIO de cliente adjudicado reciente en Salta con las llaves del 0km. Este lead ya decidió — solo necesita el empujón emocional final para no postergar.',
+  'Medio':'Enviar video EXPLICATIVO del plan de ahorro Fiat ("Cómo funciona paso a paso"). Tiene dudas sobre el mecanismo — necesita entender antes de comprometerse.',
+  'Frío':'Enviar video COMPARATIVA ("Por qué el plan Fadua es más barato que cualquier banco"). Lead en etapa inicial — necesita ver el beneficio económico real con números.',
+};
+const EC={
+  Caliente:{bg:'rgba(255,77,77,.1)',bd:'rgba(255,77,77,.35)',c:'var(--hot)',e:'🔥',l:'LEAD CALIENTE'},
+  Medio:   {bg:'rgba(255,180,0,.08)',bd:'rgba(255,180,0,.28)',c:'var(--med)',e:'🟡',l:'LEAD MEDIO'},
+  Frío:    {bg:'rgba(80,140,255,.08)',bd:'rgba(80,140,255,.28)',c:'var(--cold)',e:'🔵',l:'LEAD FRÍO'},
+};
+
+// ══ SHOW THANKS ══
+function showThanks(){
+  ans.comentario=document.getElementById('qComentario').value.trim()||'—';
+  const score=calcScore(), estado=getEstado(score);
+  const now=new Date();
+  const fecha=now.toLocaleDateString('es-AR')+' '+now.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+  const presupFmt='$'+ans.presupuesto.toLocaleString('es-AR')+'/mes';
+  const objStr=(ans.objeciones||[]).join(' · ')||'Sin objeciones';
+
+  // Ocultar slide, mostrar thanks
+  document.getElementById('s11').classList.remove('active');
+  document.getElementById('thanksScreen').classList.add('active');
+  document.getElementById('progFill').style.width='100%';
+  document.getElementById('pctLbl').textContent='100%';
+  document.getElementById('stepLbl').textContent='¡Listo!';
+
+  const nc=(ans.nombre||'').split(' ')[0]||'Felicitaciones';
+  document.getElementById('leadNombre').textContent='¡'+nc;
+  if(ans.espejo)document.getElementById('thanksEspejo').textContent='"'+ans.espejo+'"';
+  document.getElementById('cupos').textContent=Math.floor(Math.random()*3)+2;
+
+  // WhatsApp completo
+  const rec=ans.modeloRecObj;
+  const recTxt=rec?`\n🏷️ *Recomendado para vos:* ${rec.n} · Plan ${rec.plan}\n💰 *Cuota regular:* $${rec.c13.toLocaleString('es-AR')}/mes\n✅ *Adjudicación:* ${rec.adj}`:'';
+  const waTxt=encodeURIComponent(
+    '¡Hola Cristian! 🎉 Completé el quiz de Fiat Fadua.\n\n'+
+    '💭 *Lo que más quiero:* '+(ans.espejo||'—')+'\n\n'+
+    '📋 *MI PERFIL*\n━━━━━━━━━━━━━━\n'+
+    '👤 *Nombre:* '+(ans.nombre||'—')+'\n'+
+    '📱 *WhatsApp:* '+(ans.telefono||'—')+'\n'+
+    '🕐 *Horario:* '+(ans.horario||'—')+'\n\n'+
+    '🎯 *Situación:* '+(ans.perfilLabel||'—')+'\n'+
+    '😤 *Lo que más me pesa:* '+(ans.dolorLabel||'—')+'\n'+
+    '🚗 *Modelo que me interesa:* '+(ans.modeloPref||'—')+recTxt+'\n'+
+    '💰 *Presupuesto:* '+presupFmt+'\n'+
+    '📅 *Cuándo quiero iniciar:* '+(ans.cuandoInicia||'—')+'\n\n'+
+    '❓ *Mis dudas:* '+objStr+'\n'+
+    '🔍 *Ya consulté:* '+(ans.yaConsulto||'—')+'\n'+
+    '📝 *Comentario:* '+ans.comentario+'\n'+
+    '━━━━━━━━━━━━━━\n'+
+    '📊 Estado: '+estado+' ('+score+' pts)\n'+
+    '📆 '+fecha
+  );
+  document.getElementById('waBtn').href='https://wa.me/'+WA+'?text='+waTxt;
+
+  // Google Sheets
+  const ld={fecha,nombre:ans.nombre||'—',telefono:ans.telefono||'—',horario:ans.horario||'—',
+    perfil:ans.perfilLabel||'—',dolor:ans.dolorLabel||'—',
+    modeloPref:ans.modeloPref||'—',modeloRec:ans.modeloRec||'—',
+    presupuesto:presupFmt,cuandoInicia:ans.cuandoInicia||'—',
+    objeciones:objStr,yaConsulto:ans.yaConsulto||'—',
+    espejo:ans.espejo||'—',comentario:ans.comentario,
+    estado,puntaje:score};
+  if(SHEETS_URL!=='TU_URL_ACA'){document.getElementById('saveOk').classList.add('vis');
+    fetch(SHEETS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(ld)})
+      
+      .catch(()=>{});
+  }
+
+  // Admin panel
+  const e=EC[estado];
+  const ab=document.getElementById('estBanner');
+  ab.style.background=e.bg;ab.style.border='1px solid '+e.bd;
+  document.getElementById('ebEmoji').textContent=e.e;
+  document.getElementById('ebTtl').textContent=e.l;
+  document.getElementById('ebTtl').style.color=e.c;
+  document.getElementById('ebSc').textContent='Puntaje: '+score+' / 100';
+
+  const ol=document.getElementById('objList');ol.innerHTML='';
+  const objs=ans.objeciones||[];
+  if(!objs.length){
+    ol.innerHTML='<div class="obj-item2"><span class="oi2">✅</span><span class="ot2">Sin objeciones — pasar directo al cierre.</span></div>';
+  } else {
+    objs.forEach(o=>{
+      const m=OBJ_SCRIPTS[o];
+      if(m){const d=document.createElement('div');d.className='obj-item2';d.innerHTML='<span class="oi2">⚡</span><span class="ot2"><strong>'+m.t+':</strong> '+m.s+'</span>';ol.appendChild(d);}
+    });
+  }
+  document.getElementById('vidRec').textContent=VIDEO_SC[estado];
+
+  const setR=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val;};
+  setR('r-nombre',ans.nombre||'—');setR('r-tel',ans.telefono||'—');setR('r-horario',ans.horario||'—');
+  setR('r-perfil',ans.perfilLabel||'—');setR('r-dolor',ans.dolorLabel||'—');
+  setR('r-modelo',ans.modeloPref||'—');setR('r-rec',ans.modeloRec||'—');
+  setR('r-presup',presupFmt);setR('r-inicio',ans.cuandoInicia||'—');
+  setR('r-obj',objStr);setR('r-comp',ans.yaConsulto||'—');
+  setR('r-sueno',ans.espejo||'—');setR('r-coment',ans.comentario);
+  setR('r-estado',estado);setR('r-score',score+' pts');setR('r-fecha',fecha);
+
+  const lead={n:leads.length+1,nombre:ans.nombre||'—',telefono:ans.telefono||'—',estado,puntaje:score,modeloRec:ans.modeloRec||'—',modeloPref:ans.modeloPref||'—',presupuesto:presupFmt,perfil:ans.perfilLabel||'—',cuandoInicia:ans.cuandoInicia||'—',
+    yaConsulto:ans.yaConsulto||'—',objeciones:objStr,dolor:ans.dolorLabel||'—',espejo:ans.espejo||'—',comentario:ans.comentario,horario:ans.horario||'—',fecha};
+  leads.push(lead);
+  updPanel();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ══ ADMIN ══
+function trigAdm(){
+  tc++;if(tt)clearTimeout(tt);
+  tt=setTimeout(()=>{tc=0;},2000);
+  if(tc>=5){tc=0;document.getElementById('adminSec').classList.add('vis');}
+}
+function chkPwd(){
+  if(document.getElementById('adminPwd').value===ADMIN_PWD){
+    document.getElementById('adminSec').style.display='none';
+    document.getElementById('adminPanel').style.display='block';
+    adminOk=true;
+  } else {
+    document.getElementById('adminErr').style.display='block';
+    document.getElementById('adminPwd').value='';
+    setTimeout(()=>{document.getElementById('adminErr').style.display='none';},2000);
+  }
+}
+
+// ══ PANEL ══
+function updPanel(){
+  document.getElementById('cHot').textContent=leads.filter(l=>l.estado==='Caliente').length;
+  document.getElementById('cMed').textContent=leads.filter(l=>l.estado==='Medio').length;
+  document.getElementById('cCold').textContent=leads.filter(l=>l.estado==='Frío').length;
+  const SC={Caliente:'var(--hot)',Medio:'var(--med)',Frío:'var(--cold)'};
+  const SE={Caliente:'🔥',Medio:'🟡',Frío:'🔵'};
+  const tb=document.getElementById('tblBody');tb.innerHTML='';
+  document.getElementById('noLeads').style.display=leads.length?'none':'block';
+  leads.slice().reverse().forEach(l=>{
+    const c=SC[l.estado];
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="color:var(--muted)">${l.n}</td><td style="font-weight:600">${l.nombre}</td><td style="color:#4cc">${l.telefono}</td><td><span class="bdg" style="color:${c};border:1px solid ${c}44;background:${c}11">${SE[l.estado]} ${l.estado}</span></td><td style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:${c}">${l.puntaje}</td><td>${l.modeloRec}</td><td style="color:var(--muted);font-size:10px">${l.modeloPref}</td><td>${l.presupuesto}</td><td style="font-size:10px;color:var(--muted)">${l.perfil}</td><td style="font-size:10px;color:var(--muted)">${l.cuandoInicia}</td><td style="font-size:10px;color:var(--muted);white-space:nowrap">${l.fecha}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+// ══ EXCEL ══
+function exportExcel(){
+  if(!leads.length){alert('Sin leads para exportar.');return;}
+  const COLS=['#','Nombre','Teléfono','Horario','Perfil','Dolor detectado','Modelo Preferido','Modelo Recomendado','Presupuesto/mes','Cuándo Inicia','Objeciones','Ya Consultó','Espejo/Sueño','Comentario','ESTADO','Puntaje','Fecha'];
+  const ORD={Caliente:0,Medio:1,Frío:2};
+  const sorted=[...leads].sort((a,b)=>ORD[a.estado]-ORD[b.estado]);
+  const rows=sorted.map(l=>[l.n,l.nombre,l.telefono,l.horario,l.perfil,l.dolor,l.modeloPref,l.modeloRec,l.presupuesto,l.cuandoInicia,l.objeciones,l.yaConsulto,l.espejo,l.comentario,l.estado,l.puntaje,l.fecha]);
+  const ws=XLSX.utils.aoa_to_sheet([COLS,...rows]);
+  ws['!cols']=[4,22,16,16,24,28,18,18,16,18,36,20,28,28,12,8,18].map(w=>({wch:w}));
+  const rng=XLSX.utils.decode_range(ws['!ref']);
+  for(let C=rng.s.c;C<=rng.e.c;C++){const a=XLSX.utils.encode_cell({r:0,c:C});if(ws[a])ws[a].s={fill:{fgColor:{rgb:'E8001C'}},font:{bold:true,color:{rgb:'FFFFFF'}},alignment:{horizontal:'center'}};}
+  const SC2={Caliente:'FF4D4D',Medio:'FFB400',Frío:'508CFF'};
+  rows.forEach((row,i)=>{const col=SC2[row[14]]||'AAAAAA';const a=XLSX.utils.encode_cell({r:i+1,c:14});if(ws[a])ws[a].s={font:{bold:true,color:{rgb:col}},fill:{fgColor:{rgb:col+'18'}}};});
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Leads Fiat Fadua');
+  const d=new Date().toLocaleDateString('es-AR').replace(/\//g,'-');
+  XLSX.writeFile(wb,'Leads_CristianEguizabal_'+d+'.xlsx');
+}
+
+// ══ RESET ══
+function nuevoLead(){
+  ans={objeciones:[],presupuesto:350000,perfil:'',perfilLabel:'',dolorLabel:'',modeloPref:'',modeloPrefId:'',modeloRec:'',modeloRecObj:null,espejo:'',comentario:'—'};
+  document.querySelectorAll('.opt.selected,.chip.selected,.dolor-opt.selected,.modelo-card.selected,.esp-opt.selected').forEach(e=>e.classList.remove('selected'));
+  document.querySelectorAll('select').forEach(s=>s.selectedIndex=0);
+  document.querySelectorAll('input[type=text],input[type=tel],textarea').forEach(i=>i.value='');
+  document.querySelectorAll('.btn-next[id]').forEach(b=>b.disabled=true);
+  upRange4(350000);
+  document.getElementById('saveOk').classList.remove('vis');
+  document.getElementById('thanksScreen').classList.remove('active');
+  document.querySelectorAll('.slide').forEach(s=>s.classList.remove('active'));
+  document.getElementById('s0').classList.add('active');
+  if(!adminOk)document.getElementById('adminPanel').style.display='none';
+  cur=0;updProg();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>
