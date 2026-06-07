@@ -2984,6 +2984,7 @@ const PIN_SECRET = '1234';   // ← Cambiá este PIN (4 dígitos)
 const STORE_KEY  = 'balodin_leads';
 const ANALYTICS_KEY = 'balodin_analytics';
 const SESSION_KEY = 'balodin_session_id';
+const GOOGLE_SHEETS_URL = 'https://script.google.com/macros/s/AKfycbycpKsOXea7jUK9WE2r5SAs4yK-H3XZrXOJq36PW4VthQZ2oDLzbxOuWS11L7vKcJQ8/exec';
 
 const SUPABASE_URL = '';       // completar con Project URL
 const SUPABASE_ANON_KEY = '';  // completar con anon public key
@@ -3152,6 +3153,59 @@ function analyticsBase() {
   };
 }
 
+
+/* GOOGLE SHEETS CONNECTOR */
+function postToGoogleSheets(payload) {
+  try {
+    const url = typeof GOOGLE_SHEETS_URL !== 'undefined' ? GOOGLE_SHEETS_URL : '';
+    if (!url) return;
+
+    if (navigator.sendBeacon) {
+      const blob = new Blob([JSON.stringify(payload)], { type: 'text/plain;charset=utf-8' });
+      navigator.sendBeacon(url, blob);
+      return;
+    }
+
+    fetch(url, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload),
+      keepalive: true
+    }).catch(() => {});
+  } catch (err) {
+    console.warn('No se pudo enviar a Google Sheets', err);
+  }
+}
+
+function sendLeadToGoogleSheets(lead) {
+  postToGoogleSheets({
+    type: 'lead',
+    nombre: lead.nombre || '',
+    whatsapp: lead.whatsapp || '',
+    prediccion: {
+      champion: currentPrediction?.champion || '',
+      stage: currentPrediction?.stage || '',
+      player: currentPrediction?.player || '',
+      watch: currentPrediction?.watch || '',
+      cabala: currentPrediction?.cabala || ''
+    },
+    fixture_downloaded: !!lead.fixture_downloaded,
+    session_id: getSessionId()
+  });
+}
+
+function sendEventToGoogleSheets(eventName, data = {}) {
+  postToGoogleSheets({
+    type: 'event',
+    event: eventName || '',
+    screen: data.screen || '',
+    step: data.step ?? '',
+    session_id: getSessionId(),
+    extra: data || {}
+  });
+}
+
 function trackEvent(name, data = {}) {
   const sid = getSessionId();
   const a = Object.assign(analyticsBase(), getAnalytics());
@@ -3183,6 +3237,7 @@ function trackEvent(name, data = {}) {
 
   if (a.events.length > 600) a.events = a.events.slice(-600);
   saveAnalytics(a);
+  sendEventToGoogleSheets(name, data);
 }
 
 function pct(n, d) {
@@ -3914,6 +3969,7 @@ function submitForm(e) {
 
   setTimeout(async () => {
     trackEvent('form_completed', { nombre });
+    sendLeadToGoogleSheets({ nombre, whatsapp, fixture_downloaded:false });
     await addLead({
       nombre,
       apellido:'',
@@ -3957,7 +4013,7 @@ async function downloadFixture() {
     a.download = 'fixture-balodin-mundial-en-familia.png';
     a.href = cv.toDataURL('image/png');
     a.click();
-    trackEvent('fixture_downloaded');
+    trackEvent('fixture_downloaded', { nombre: currentLeadName || '', champion: currentPrediction?.champion || '' });
     showToast('¡Fixture descargado!', 'ok');
   } catch (err) {
     console.error(err);
@@ -4000,6 +4056,10 @@ spawnDots();
 buildFixture();
 setTimeout(() => { if (document.getElementById('s-scratch')) initScratchCard(true); }, 200);
 window.addEventListener('resize', () => { if (document.getElementById('s-scratch')?.classList.contains('active')) resetScratchCard(); });
+function testGoogleSheetsConnection() {
+  sendEventToGoogleSheets('connection_test', { screen:'manual_test', step:'test' });
+  if (typeof showToast === 'function') showToast('Test enviado a Google Sheets', 'ok');
+}
 </script>
 
 <script>
