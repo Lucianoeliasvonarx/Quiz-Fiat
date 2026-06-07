@@ -2397,6 +2397,19 @@ body::before{opacity:.12 !important;}
   object-fit:contain !important;
 }
 
+
+/* ===== V38 FORM CTA FIX ===== */
+#s-form .btn,
+#s-form button,
+#leadForm button{
+  pointer-events:auto !important;
+  position:relative !important;
+  z-index:50 !important;
+}
+#s-form{
+  touch-action:auto !important;
+}
+
 </style>
 </head>
 <body>
@@ -4106,6 +4119,141 @@ function testGoogleSheetsConnection() {
       }
     });
   }, 2500);
+})();
+
+
+/* ===== V38 HARD FIX: FORM → SCRATCH SIN BLOQUEO ===== */
+(function(){
+  function getInputValue(possibleIds){
+    for (const id of possibleIds) {
+      const el = document.getElementById(id);
+      if (el && typeof el.value === 'string') return el.value.trim();
+    }
+    return '';
+  }
+
+  function forceGoScratch(){
+    try {
+      if (typeof goTo === 'function') {
+        goTo('s-scratch');
+      } else {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('s-scratch')?.classList.add('active');
+        window.scrollTo({top:0, behavior:'smooth'});
+      }
+
+      setTimeout(() => {
+        try {
+          if (typeof initScratchCard === 'function') initScratchCard(true);
+          if (typeof resetScratchCard === 'function') resetScratchCard();
+        } catch(e) {}
+      }, 250);
+    } catch(err) {
+      console.warn('No se pudo ir al raspadito', err);
+    }
+  }
+
+  function hardSubmitLead(e){
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+    }
+
+    const nombre = getInputValue(['nombre','name','leadName','fullName']);
+    const whatsapp = getInputValue(['whatsapp','phone','telefono','leadPhone']);
+
+    if (!nombre) {
+      if (typeof showToast === 'function') showToast('Dejanos tu nombre para seguir', 'err');
+      document.getElementById('nombre')?.focus();
+      return false;
+    }
+
+    if (!whatsapp) {
+      if (typeof showToast === 'function') showToast('Dejanos tu WhatsApp para seguir', 'err');
+      document.getElementById('whatsapp')?.focus();
+      return false;
+    }
+
+    try {
+      window.currentLeadName = nombre;
+      window.currentLeadPhone = whatsapp;
+
+      const leadPayload = {
+        nombre,
+        whatsapp,
+        fixture_downloaded:false,
+        timestamp:new Date().toISOString()
+      };
+
+      // Local sin await
+      try {
+        if (typeof addLead === 'function') addLead(leadPayload);
+      } catch(localErr) {
+        console.warn('addLead local falló', localErr);
+      }
+
+      // Sheets sin await
+      try {
+        if (typeof sendLeadToGoogleSheets === 'function') sendLeadToGoogleSheets(leadPayload);
+      } catch(remoteErr) {
+        console.warn('Sheets lead falló', remoteErr);
+      }
+
+      try {
+        if (typeof trackEvent === 'function') trackEvent('form_completed', { nombre });
+      } catch(trackErr) {}
+
+    } catch(err) {
+      console.warn('Error guardando lead, igual avanza', err);
+    }
+
+    // Lo más importante: avanzar siempre.
+    forceGoScratch();
+    return false;
+  }
+
+  window.hardSubmitLead = hardSubmitLead;
+
+  document.addEventListener('DOMContentLoaded', function(){
+    const form = document.getElementById('leadForm') || document.querySelector('form');
+    if (form) {
+      form.setAttribute('novalidate', 'novalidate');
+      form.onsubmit = hardSubmitLead;
+      form.addEventListener('submit', hardSubmitLead, true);
+    }
+
+    // Detectar botones dentro del formulario o botones que digan activar/ver cupón
+    document.querySelectorAll('button').forEach(btn => {
+      const txt = (btn.textContent || '').toLowerCase();
+      const insideForm = form && form.contains(btn);
+      const looksSubmit = txt.includes('activar') || txt.includes('beneficio') || txt.includes('cupón') || txt.includes('cupon') || txt.includes('continuar');
+      if (insideForm || looksSubmit) {
+        if (insideForm) btn.setAttribute('type', 'button');
+        btn.addEventListener('click', function(ev){
+          const active = document.querySelector('.screen.active')?.id;
+          if (active === 's-form' || insideForm) hardSubmitLead(ev);
+        }, true);
+      }
+    });
+  });
+
+  // Fallback: si el usuario queda en formulario luego del evento completado, lo pasamos.
+  let lastFormCompleted = 0;
+  const oldTrackEvent = window.trackEvent;
+  if (typeof oldTrackEvent === 'function') {
+    window.trackEvent = function(name, data){
+      const result = oldTrackEvent.apply(this, arguments);
+      if (name === 'form_completed') {
+        lastFormCompleted = Date.now();
+        setTimeout(() => {
+          const active = document.querySelector('.screen.active')?.id;
+          if (active === 's-form') forceGoScratch();
+        }, 350);
+      }
+      return result;
+    }
+  }
 })();
 
 </script>
