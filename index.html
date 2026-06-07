@@ -3154,27 +3154,31 @@ function analyticsBase() {
 }
 
 
-/* GOOGLE SHEETS CONNECTOR */
+/* GOOGLE SHEETS CONNECTOR — NON BLOCKING */
 function postToGoogleSheets(payload) {
   try {
     const url = typeof GOOGLE_SHEETS_URL !== 'undefined' ? GOOGLE_SHEETS_URL : '';
     if (!url) return;
 
-    if (navigator.sendBeacon) {
-      const blob = new Blob([JSON.stringify(payload)], { type: 'text/plain;charset=utf-8' });
-      navigator.sendBeacon(url, blob);
-      return;
-    }
+    const body = JSON.stringify(payload);
 
-    fetch(url, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(payload),
-      keepalive: true
-    }).catch(() => {});
+    // Fire and forget. Nunca bloquea el flujo.
+    setTimeout(() => {
+      try {
+        fetch(url, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body,
+          keepalive: true
+        }).catch(() => {});
+      } catch (err) {
+        console.warn('Sheets background send failed', err);
+      }
+    }, 50);
+
   } catch (err) {
-    console.warn('No se pudo enviar a Google Sheets', err);
+    console.warn('No se pudo preparar envío a Google Sheets', err);
   }
 }
 
@@ -4060,6 +4064,50 @@ function testGoogleSheetsConnection() {
   sendEventToGoogleSheets('connection_test', { screen:'manual_test', step:'test' });
   if (typeof showToast === 'function') showToast('Test enviado a Google Sheets', 'ok');
 }
+
+/* V37 MOBILE FLOW SAFETY */
+(function(){
+  function safeFormSubmitHandler(e){
+    const form = e.target;
+    if (!form || form.id !== 'leadForm') return;
+
+    // Deja que el handler original corra, pero si algo se queda colgado, forzamos avance.
+    setTimeout(() => {
+      const activeId = document.querySelector('.screen.active')?.id;
+      if (activeId === 's-form') {
+        try {
+          const nombre = document.getElementById('nombre')?.value?.trim() || '';
+          const whatsapp = document.getElementById('whatsapp')?.value?.trim() || '';
+          if (nombre && whatsapp) {
+            if (typeof sendLeadToGoogleSheets === 'function') {
+              sendLeadToGoogleSheets({ nombre, whatsapp, fixture_downloaded:false });
+            }
+            if (typeof trackEvent === 'function') {
+              trackEvent('form_completed_safe', { nombre });
+            }
+            if (typeof goTo === 'function') goTo('s-scratch');
+          }
+        } catch(err) {
+          console.warn('safe submit fallback', err);
+          if (typeof goTo === 'function') goTo('s-scratch');
+        }
+      }
+    }, 900);
+  }
+
+  document.addEventListener('submit', safeFormSubmitHandler, true);
+
+  // Si algún botón queda en estado cargando, lo destrabamos.
+  setInterval(() => {
+    document.querySelectorAll('button[disabled]').forEach(btn => {
+      const txt = (btn.textContent || '').toLowerCase();
+      if (txt.includes('guardando') || txt.includes('preparando') || txt.includes('enviando')) {
+        btn.disabled = false;
+      }
+    });
+  }, 2500);
+})();
+
 </script>
 
 <script>
