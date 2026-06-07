@@ -2410,6 +2410,15 @@ body::before{opacity:.12 !important;}
   touch-action:auto !important;
 }
 
+
+/* ===== V39: no loader lock ===== */
+#loader.active{
+  pointer-events:none !important;
+}
+#submitBtn{
+  pointer-events:auto !important;
+}
+
 </style>
 </head>
 <body>
@@ -2584,7 +2593,7 @@ body::before{opacity:.12 !important;}
     <div><strong>Ya casi es tuyo</strong><span>Cupón + fixture personalizado + sorpresa en Balodin</span></div>
   </div>
 
-  <form id="mainForm" onsubmit="submitForm(event)" novalidate>
+  <form id="mainForm" onsubmit="return submitForm(event)" novalidate>
 
     <div class="fcard">
       <div class="fcard-label">Tus datos</div>
@@ -2619,7 +2628,7 @@ body::before{opacity:.12 !important;}
         <span>Acepto que Balodin use mi nombre y WhatsApp para enviarme mi cupón, novedades, promociones y comunicaciones comerciales. Puedo solicitar la baja cuando quiera.</span>
       </div>
     </div>
-<button type="submit" class="btn btn-cta" id="submitBtn">
+<button type="button" class="btn btn-cta" id="submitBtn" onclick="submitForm(event)">
       <span>🎁</span> GUARDAR Y REVELAR CUPÓN
     </button>
 
@@ -3944,68 +3953,155 @@ function createPersonalFixture() {
   goTo('s-form');
 }
 
-function submitForm(e) {
-  e.preventDefault();
-  const nombre = document.getElementById('f-nombre').value.trim();
-  const wpp    = document.getElementById('f-wpp').value.trim();
 
-  let ok = true;
+
+/* ===== V40: FIX NOMBRE FORM/FAMILIA ===== */
+function getBalodinNombre() {
+  return (
+    document.getElementById('f-nombre')?.value?.trim() ||
+    document.getElementById('nombre')?.value?.trim() ||
+    document.getElementById('name')?.value?.trim() ||
+    ''
+  );
+}
+
+function getBalodinWhatsapp() {
+  return (
+    document.getElementById('f-wpp')?.value?.trim() ||
+    document.getElementById('whatsapp')?.value?.trim() ||
+    document.getElementById('phone')?.value?.trim() ||
+    ''
+  );
+}
+
+/* Si alguna función vieja busca #nombre/#whatsapp, le damos espejos invisibles */
+(function(){
+  document.addEventListener('DOMContentLoaded', function(){
+    if (!document.getElementById('nombre')) {
+      const n = document.createElement('input');
+      n.type = 'hidden';
+      n.id = 'nombre';
+      n.name = 'nombre';
+      document.body.appendChild(n);
+    }
+    if (!document.getElementById('whatsapp')) {
+      const w = document.createElement('input');
+      w.type = 'hidden';
+      w.id = 'whatsapp';
+      w.name = 'whatsapp';
+      document.body.appendChild(w);
+    }
+
+    const sync = () => {
+      const n = document.getElementById('nombre');
+      const w = document.getElementById('whatsapp');
+      if (n) n.value = document.getElementById('f-nombre')?.value || '';
+      if (w) w.value = document.getElementById('f-wpp')?.value || '';
+    };
+
+    document.getElementById('f-nombre')?.addEventListener('input', sync);
+    document.getElementById('f-wpp')?.addEventListener('input', sync);
+    sync();
+  });
+})();
+
+function submitForm(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  const nombreEl = document.getElementById('f-nombre');
+  const wppEl = document.getElementById('f-wpp');
+  const termsEl = document.getElementById('f-terms');
   const eW = document.getElementById('err-wpp');
+  const submitBtn = document.getElementById('submitBtn');
+  const loader = document.getElementById('loader');
+
+  const nombre = getBalodinNombre();
+  const wpp = getBalodinWhatsapp();
+
+  if (loader) loader.classList.remove('active');
+  if (submitBtn) submitBtn.disabled = false;
 
   if (!nombre) {
     showToast('Ingresá tu nombre', 'err');
-    ok = false;
+    nombreEl?.focus();
+    return false;
   }
 
   if (wpp.replace(/\D/g,'').length < 8) {
-    eW.classList.add('show');
-    ok = false;
+    eW?.classList.add('show');
+    showToast('Ingresá un WhatsApp válido', 'err');
+    wppEl?.focus();
+    return false;
   } else {
-    eW.classList.remove('show');
+    eW?.classList.remove('show');
   }
 
-  if (!document.getElementById('f-terms').checked) {
+  if (!termsEl || !termsEl.checked) {
     showToast('Aceptá los términos para continuar', 'err');
-    return;
+    return false;
   }
-
-  if (!ok) return;
 
   const hijos = [];
   document.querySelectorAll('.hijo-card').forEach(card => {
-    const i   = card.id.split('_')[1];
-    const nom = card.querySelector(`[name=hnom_${i}]`)?.value||'';
-    const eda = card.querySelector(`[name=hedad_${i}]`)?.value||'';
-    const cum = card.querySelector(`[name=hcumple_${i}]`)?.value||'';
-    const gen = card.querySelector(`[name=hgenero_${i}]`)?.value||'';
-    if (nom||eda) hijos.push({ nombre:nom, edad:eda, cumpleanos:cum, genero:gen });
+    const i = card.id.split('_')[1];
+    const nom = card.querySelector(`[name=hnom_${i}]`)?.value || '';
+    const eda = card.querySelector(`[name=hedad_${i}]`)?.value || '';
+    const cum = card.querySelector(`[name=hcumple_${i}]`)?.value || '';
+    const gen = card.querySelector(`[name=hgenero_${i}]`)?.value || '';
+    if (nom || eda) hijos.push({ nombre:nom, edad:eda, cumpleanos:cum, genero:gen });
   });
 
-  document.getElementById('loader').classList.add('active');
-  document.getElementById('submitBtn').disabled = true;
+  const leadPayload = {
+    nombre,
+    apellido:'',
+    email:'',
+    whatsapp:wpp,
+    hijos:hijos.length ? hijos : null,
+    prediccion: currentPrediction,
+    fixture_downloaded:false,
+    fecha:new Date().toISOString()
+  };
 
-  setTimeout(async () => {
-    trackEvent('form_completed', { nombre });
-    sendLeadToGoogleSheets({ nombre, whatsapp, fixture_downloaded:false });
-    await addLead({
-      nombre,
-      apellido:'',
-      email:'',
-      whatsapp:wpp,
-      hijos:hijos.length?hijos:null,
-      prediccion: currentPrediction,
-      fecha:new Date().toISOString()
-    });
-
-    document.getElementById('loader').classList.remove('active');
-    document.getElementById('submitBtn').disabled = false;
+  try {
+    currentLeadName = nombre;
     prepareFixtureBuilder(nombre);
-    document.getElementById('welcomeMsg').textContent = `¡Hola ${nombre}! tu cupón y fixture ya están listos`;
-    document.getElementById('mainForm').reset();
-    document.getElementById('hijosContainer').innerHTML = '';
-    goTo('s-scratch');
-  }, 550);
+    const welcome = document.getElementById('welcomeMsg');
+    if (welcome) welcome.textContent = `¡Hola ${nombre}! tu cupón y fixture ya están listos`;
+  } catch(err) {
+    console.warn('No se pudo preparar fixture, pero el flujo continúa', err);
+  }
+
+  goTo('s-scratch');
+
+  setTimeout(() => {
+    try {
+      if (typeof initScratchCard === 'function') initScratchCard(true);
+      if (typeof resetScratchCard === 'function') resetScratchCard();
+    } catch(err) {
+      console.warn('No se pudo reiniciar raspadito', err);
+    }
+  }, 250);
+
+  setTimeout(() => {
+    try { trackEvent('form_completed', { nombre }); } catch(err) {}
+    try { sendLeadToGoogleSheets(leadPayload); } catch(err) {}
+    try { addLead(leadPayload); } catch(err) {}
+  }, 80);
+
+  setTimeout(() => {
+    try {
+      document.getElementById('mainForm')?.reset();
+      const hc = document.getElementById('hijosContainer');
+      if (hc) hc.innerHTML = '';
+    } catch(err) {}
+  }, 900);
+
+  return false;
 }
+
 
 /* ══════════════════════════════════════════
    DESCARGAR MI FIXTURE
@@ -4089,7 +4185,7 @@ function testGoogleSheetsConnection() {
       const activeId = document.querySelector('.screen.active')?.id;
       if (activeId === 's-form') {
         try {
-          const nombre = document.getElementById('nombre')?.value?.trim() || '';
+          const nombre =  '';
           const whatsapp = document.getElementById('whatsapp')?.value?.trim() || '';
           if (nombre && whatsapp) {
             if (typeof sendLeadToGoogleSheets === 'function') {
@@ -4254,6 +4350,41 @@ function testGoogleSheetsConnection() {
       return result;
     }
   }
+})();
+
+
+/* Override seguro para agregar familia */
+(function(){
+  const oldAddHijo = window.addHijo;
+  window.addHijo = function(){
+    const nombre = getBalodinNombre();
+    if (!nombre) {
+      if (typeof showToast === 'function') showToast('Primero dejanos tu nombre', 'err');
+      document.getElementById('f-nombre')?.focus();
+      return;
+    }
+    try {
+      return oldAddHijo ? oldAddHijo.apply(this, arguments) : null;
+    } catch(err) {
+      console.warn('addHijo original falló, usando fallback', err);
+      const container = document.getElementById('hijosContainer');
+      if (!container) return;
+      const i = Date.now();
+      const div = document.createElement('div');
+      div.className = 'hijo-card';
+      div.id = 'hijo_' + i;
+      div.innerHTML = `
+        <div class="form-grid">
+          <div class="field"><label>Nombre del nene/a</label><input name="hnom_${i}" placeholder="Ej: Sofi"></div>
+          <div class="field"><label>Edad</label><input name="hedad_${i}" placeholder="Ej: 6"></div>
+          <div class="field"><label>Cumpleaños</label><input name="hcumple_${i}" placeholder="Ej: 15/08"></div>
+          <div class="field"><label>Género</label><select name="hgenero_${i}"><option value="">Opcional</option><option>Niña</option><option>Niño</option><option>Prefiero no decir</option></select></div>
+        </div>
+        <button type="button" class="mini-remove" onclick="this.closest('.hijo-card').remove()">Quitar</button>
+      `;
+      container.appendChild(div);
+    }
+  };
 })();
 
 </script>
