@@ -2398,26 +2398,42 @@ body::before{opacity:.12 !important;}
 }
 
 
-/* ===== V38 FORM CTA FIX ===== */
-#s-form .btn,
-#s-form button,
-#leadForm button{
-  pointer-events:auto !important;
-  position:relative !important;
-  z-index:50 !important;
-}
-#s-form{
-  touch-action:auto !important;
-}
-
-
-/* ===== V39: no loader lock ===== */
-#loader.active{
+/* ===== V43: flujo estable + notificaciones visibles ===== */
+.toast{
+  position:fixed !important;
+  left:50% !important;
+  bottom:24px !important;
+  transform:translateX(-50%) translateY(20px) !important;
+  z-index:999999 !important;
+  max-width:min(92vw, 420px) !important;
+  padding:14px 18px !important;
+  border-radius:18px !important;
+  background:#FFE39B !important;
+  color:#641B20 !important;
+  border:2px solid rgba(255,255,255,.65) !important;
+  box-shadow:0 16px 42px rgba(60,8,13,.35) !important;
+  font-weight:1000 !important;
+  text-align:center !important;
+  line-height:1.25 !important;
+  opacity:0 !important;
   pointer-events:none !important;
 }
-#submitBtn{
-  pointer-events:auto !important;
+.toast.show{
+  opacity:1 !important;
+  transform:translateX(-50%) translateY(0) !important;
 }
+.toast.err{
+  background:#FFF1F1 !important;
+  color:#9D1020 !important;
+  border-color:#FFB9C0 !important;
+}
+.toast.ok{
+  background:#FFF3B8 !important;
+  color:#641B20 !important;
+  border-color:#FFE39B !important;
+}
+#loader.active{ pointer-events:none !important; }
+#submitBtn, .btn-add-hijo{ pointer-events:auto !important; position:relative !important; z-index:50 !important; }
 
 </style>
 </head>
@@ -2628,7 +2644,7 @@ body::before{opacity:.12 !important;}
         <span>Acepto que Balodin use mi nombre y WhatsApp para enviarme mi cupón, novedades, promociones y comunicaciones comerciales. Puedo solicitar la baja cuando quiera.</span>
       </div>
     </div>
-<button type="button" class="btn btn-cta" id="submitBtn" onclick="submitForm(event)">
+<button type="submit" class="btn btn-cta" id="submitBtn">
       <span>🎁</span> GUARDAR Y REVELAR CUPÓN
     </button>
 
@@ -3176,31 +3192,27 @@ function analyticsBase() {
 }
 
 
-/* GOOGLE SHEETS CONNECTOR — NON BLOCKING */
+/* GOOGLE SHEETS — SEGUNDO PLANO, NO BLOQUEA */
 function postToGoogleSheets(payload) {
   try {
     const url = typeof GOOGLE_SHEETS_URL !== 'undefined' ? GOOGLE_SHEETS_URL : '';
     if (!url) return;
 
-    const body = JSON.stringify(payload);
-
-    // Fire and forget. Nunca bloquea el flujo.
     setTimeout(() => {
       try {
         fetch(url, {
           method: 'POST',
           mode: 'no-cors',
           headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body,
+          body: JSON.stringify(payload),
           keepalive: true
         }).catch(() => {});
       } catch (err) {
         console.warn('Sheets background send failed', err);
       }
-    }, 50);
-
+    }, 30);
   } catch (err) {
-    console.warn('No se pudo preparar envío a Google Sheets', err);
+    console.warn('Sheets connector unavailable', err);
   }
 }
 
@@ -3210,11 +3222,11 @@ function sendLeadToGoogleSheets(lead) {
     nombre: lead.nombre || '',
     whatsapp: lead.whatsapp || '',
     prediccion: {
-      champion: currentPrediction?.champion || '',
-      stage: currentPrediction?.stage || '',
-      player: currentPrediction?.player || '',
-      watch: currentPrediction?.watch || '',
-      cabala: currentPrediction?.cabala || ''
+      champion: lead.prediccion?.champion || currentPrediction?.champion || '',
+      stage: lead.prediccion?.stage || currentPrediction?.stage || '',
+      player: lead.prediccion?.player || currentPrediction?.player || '',
+      watch: lead.prediccion?.watch || currentPrediction?.watch || '',
+      cabala: lead.prediccion?.cabala || currentPrediction?.cabala || ''
     },
     fixture_downloaded: !!lead.fixture_downloaded,
     session_id: getSessionId()
@@ -3263,7 +3275,7 @@ function trackEvent(name, data = {}) {
 
   if (a.events.length > 600) a.events = a.events.slice(-600);
   saveAnalytics(a);
-  sendEventToGoogleSheets(name, data);
+  try { sendEventToGoogleSheets(name, data); } catch(err) {}
 }
 
 function pct(n, d) {
@@ -3954,92 +3966,41 @@ function createPersonalFixture() {
 }
 
 
-
-/* ===== V40: FIX NOMBRE FORM/FAMILIA ===== */
-function getBalodinNombre() {
-  return (
-    document.getElementById('f-nombre')?.value?.trim() ||
-    document.getElementById('nombre')?.value?.trim() ||
-    document.getElementById('name')?.value?.trim() ||
-    ''
-  );
-}
-
-function getBalodinWhatsapp() {
-  return (
-    document.getElementById('f-wpp')?.value?.trim() ||
-    document.getElementById('whatsapp')?.value?.trim() ||
-    document.getElementById('phone')?.value?.trim() ||
-    ''
-  );
-}
-
-/* Si alguna función vieja busca #nombre/#whatsapp, le damos espejos invisibles */
-(function(){
-  document.addEventListener('DOMContentLoaded', function(){
-    if (!document.getElementById('nombre')) {
-      const n = document.createElement('input');
-      n.type = 'hidden';
-      n.id = 'nombre';
-      n.name = 'nombre';
-      document.body.appendChild(n);
-    }
-    if (!document.getElementById('whatsapp')) {
-      const w = document.createElement('input');
-      w.type = 'hidden';
-      w.id = 'whatsapp';
-      w.name = 'whatsapp';
-      document.body.appendChild(w);
-    }
-
-    const sync = () => {
-      const n = document.getElementById('nombre');
-      const w = document.getElementById('whatsapp');
-      if (n) n.value = document.getElementById('f-nombre')?.value || '';
-      if (w) w.value = document.getElementById('f-wpp')?.value || '';
-    };
-
-    document.getElementById('f-nombre')?.addEventListener('input', sync);
-    document.getElementById('f-wpp')?.addEventListener('input', sync);
-    sync();
-  });
-})();
-
 function submitForm(e) {
   if (e) {
     e.preventDefault();
     e.stopPropagation();
   }
 
-  const nombreEl = document.getElementById('f-nombre');
-  const wppEl = document.getElementById('f-wpp');
-  const termsEl = document.getElementById('f-terms');
-  const eW = document.getElementById('err-wpp');
-  const submitBtn = document.getElementById('submitBtn');
+  const nombreInput = document.getElementById('f-nombre');
+  const wppInput = document.getElementById('f-wpp');
+  const termsInput = document.getElementById('f-terms');
+  const errWpp = document.getElementById('err-wpp');
   const loader = document.getElementById('loader');
+  const submitBtn = document.getElementById('submitBtn');
 
-  const nombre = getBalodinNombre();
-  const wpp = getBalodinWhatsapp();
+  const nombre = (nombreInput?.value || '').trim();
+  const wpp = (wppInput?.value || '').trim();
 
   if (loader) loader.classList.remove('active');
   if (submitBtn) submitBtn.disabled = false;
 
   if (!nombre) {
-    showToast('Ingresá tu nombre', 'err');
-    nombreEl?.focus();
+    showToast('Ingresá tu nombre para seguir', 'err');
+    nombreInput?.focus();
     return false;
   }
 
   if (wpp.replace(/\D/g,'').length < 8) {
-    eW?.classList.add('show');
+    errWpp?.classList.add('show');
     showToast('Ingresá un WhatsApp válido', 'err');
-    wppEl?.focus();
+    wppInput?.focus();
     return false;
   } else {
-    eW?.classList.remove('show');
+    errWpp?.classList.remove('show');
   }
 
-  if (!termsEl || !termsEl.checked) {
+  if (!termsInput?.checked) {
     showToast('Aceptá los términos para continuar', 'err');
     return false;
   }
@@ -4065,37 +4026,39 @@ function submitForm(e) {
     fecha:new Date().toISOString()
   };
 
+  // Preparar nombre y fixture antes de avanzar.
   try {
     currentLeadName = nombre;
     prepareFixtureBuilder(nombre);
     const welcome = document.getElementById('welcomeMsg');
     if (welcome) welcome.textContent = `¡Hola ${nombre}! tu cupón y fixture ya están listos`;
   } catch(err) {
-    console.warn('No se pudo preparar fixture, pero el flujo continúa', err);
+    console.warn('Preparación visual falló, pero continúa', err);
   }
 
+  // Avanzar inmediatamente: esto no depende de Sheets ni Supabase.
   goTo('s-scratch');
 
   setTimeout(() => {
     try {
-      if (typeof initScratchCard === 'function') initScratchCard(true);
       if (typeof resetScratchCard === 'function') resetScratchCard();
-    } catch(err) {
-      console.warn('No se pudo reiniciar raspadito', err);
-    }
-  }, 250);
+      else if (typeof initScratchCard === 'function') initScratchCard(true);
+    } catch(err) {}
+  }, 180);
 
+  // Guardado en segundo plano: nunca frena el flujo.
   setTimeout(() => {
     try { trackEvent('form_completed', { nombre }); } catch(err) {}
     try { sendLeadToGoogleSheets(leadPayload); } catch(err) {}
     try { addLead(leadPayload); } catch(err) {}
-  }, 80);
+  }, 60);
 
+  // Limpiar después de avanzar.
   setTimeout(() => {
     try {
       document.getElementById('mainForm')?.reset();
-      const hc = document.getElementById('hijosContainer');
-      if (hc) hc.innerHTML = '';
+      const container = document.getElementById('hijosContainer');
+      if (container) container.innerHTML = '';
     } catch(err) {}
   }, 900);
 
@@ -4106,35 +4069,71 @@ function submitForm(e) {
 /* ══════════════════════════════════════════
    DESCARGAR MI FIXTURE
 ══════════════════════════════════════════ */
+
 async function downloadFixture() {
   const btn = document.getElementById('btnDl');
-  btn.textContent = '⏳ Preparando fixture...';
-  btn.disabled = true;
-  if (!window.html2canvas) {
-    await new Promise((res, rej) => {
-      const s = document.createElement('script');
-      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-      s.onload = res;
-      s.onerror = rej;
-      document.head.appendChild(s);
-    });
+  const oldHTML = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.textContent = '⏳ Preparando fixture...';
+    btn.disabled = true;
   }
+
   try {
+    if (!window.html2canvas) {
+      await new Promise((res, rej) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+        s.onload = res;
+        s.onerror = rej;
+        document.head.appendChild(s);
+      });
+    }
+
     const el = document.getElementById('dl-fixture');
-    const cv = await html2canvas(el, { scale: 2.4, backgroundColor: '#B31320', useCORS: true, logging: false });
+    if (!el) throw new Error('No existe dl-fixture');
+
+    const cv = await html2canvas(el, {
+      scale: 2,
+      backgroundColor: '#B31320',
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+      windowWidth: el.scrollWidth,
+      windowHeight: el.scrollHeight
+    });
+
+    const dataUrl = cv.toDataURL('image/png');
     const a = document.createElement('a');
     a.download = 'fixture-balodin-mundial-en-familia.png';
-    a.href = cv.toDataURL('image/png');
+    a.href = dataUrl;
+    document.body.appendChild(a);
     a.click();
-    trackEvent('fixture_downloaded', { nombre: currentLeadName || '', champion: currentPrediction?.champion || '' });
-    showToast('¡Fixture descargado!', 'ok');
+    a.remove();
+
+    // Fallback iPhone/Safari: si no descarga, al menos abre la imagen.
+    setTimeout(() => {
+      try {
+        if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+          const w = window.open();
+          if (w) w.document.write(`<img src="${dataUrl}" style="width:100%;height:auto;">`);
+        }
+      } catch(err) {}
+    }, 400);
+
+    try { trackEvent('fixture_downloaded', { nombre: currentLeadName || '', champion: currentPrediction?.champion || '' }); } catch(err) {}
+    showToast('¡Fixture generado! Si no descarga, se abre como imagen.', 'ok');
+
   } catch (err) {
     console.error(err);
-    showToast('No se pudo generar la descarga', 'err');
+    showToast('No se pudo generar la descarga. Probá de nuevo.', 'err');
   }
-  btn.innerHTML = '<span>⬇</span> DESCARGAR MI FIXTURE';
-  btn.disabled = false;
+
+  if (btn) {
+    btn.innerHTML = oldHTML || '<span>⬇</span> DESCARGAR MI FIXTURE';
+    btn.disabled = false;
+  }
 }
+
 
 /* ══════════════════════════════════════════
    COMPARTIR
@@ -4169,224 +4168,6 @@ spawnDots();
 buildFixture();
 setTimeout(() => { if (document.getElementById('s-scratch')) initScratchCard(true); }, 200);
 window.addEventListener('resize', () => { if (document.getElementById('s-scratch')?.classList.contains('active')) resetScratchCard(); });
-function testGoogleSheetsConnection() {
-  sendEventToGoogleSheets('connection_test', { screen:'manual_test', step:'test' });
-  if (typeof showToast === 'function') showToast('Test enviado a Google Sheets', 'ok');
-}
-
-/* V37 MOBILE FLOW SAFETY */
-(function(){
-  function safeFormSubmitHandler(e){
-    const form = e.target;
-    if (!form || form.id !== 'leadForm') return;
-
-    // Deja que el handler original corra, pero si algo se queda colgado, forzamos avance.
-    setTimeout(() => {
-      const activeId = document.querySelector('.screen.active')?.id;
-      if (activeId === 's-form') {
-        try {
-          const nombre =  '';
-          const whatsapp = document.getElementById('whatsapp')?.value?.trim() || '';
-          if (nombre && whatsapp) {
-            if (typeof sendLeadToGoogleSheets === 'function') {
-              sendLeadToGoogleSheets({ nombre, whatsapp, fixture_downloaded:false });
-            }
-            if (typeof trackEvent === 'function') {
-              trackEvent('form_completed_safe', { nombre });
-            }
-            if (typeof goTo === 'function') goTo('s-scratch');
-          }
-        } catch(err) {
-          console.warn('safe submit fallback', err);
-          if (typeof goTo === 'function') goTo('s-scratch');
-        }
-      }
-    }, 900);
-  }
-
-  document.addEventListener('submit', safeFormSubmitHandler, true);
-
-  // Si algún botón queda en estado cargando, lo destrabamos.
-  setInterval(() => {
-    document.querySelectorAll('button[disabled]').forEach(btn => {
-      const txt = (btn.textContent || '').toLowerCase();
-      if (txt.includes('guardando') || txt.includes('preparando') || txt.includes('enviando')) {
-        btn.disabled = false;
-      }
-    });
-  }, 2500);
-})();
-
-
-/* ===== V38 HARD FIX: FORM → SCRATCH SIN BLOQUEO ===== */
-(function(){
-  function getInputValue(possibleIds){
-    for (const id of possibleIds) {
-      const el = document.getElementById(id);
-      if (el && typeof el.value === 'string') return el.value.trim();
-    }
-    return '';
-  }
-
-  function forceGoScratch(){
-    try {
-      if (typeof goTo === 'function') {
-        goTo('s-scratch');
-      } else {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById('s-scratch')?.classList.add('active');
-        window.scrollTo({top:0, behavior:'smooth'});
-      }
-
-      setTimeout(() => {
-        try {
-          if (typeof initScratchCard === 'function') initScratchCard(true);
-          if (typeof resetScratchCard === 'function') resetScratchCard();
-        } catch(e) {}
-      }, 250);
-    } catch(err) {
-      console.warn('No se pudo ir al raspadito', err);
-    }
-  }
-
-  function hardSubmitLead(e){
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      if (e.stopImmediatePropagation) e.stopImmediatePropagation();
-    }
-
-    const nombre = getInputValue(['nombre','name','leadName','fullName']);
-    const whatsapp = getInputValue(['whatsapp','phone','telefono','leadPhone']);
-
-    if (!nombre) {
-      if (typeof showToast === 'function') showToast('Dejanos tu nombre para seguir', 'err');
-      document.getElementById('nombre')?.focus();
-      return false;
-    }
-
-    if (!whatsapp) {
-      if (typeof showToast === 'function') showToast('Dejanos tu WhatsApp para seguir', 'err');
-      document.getElementById('whatsapp')?.focus();
-      return false;
-    }
-
-    try {
-      window.currentLeadName = nombre;
-      window.currentLeadPhone = whatsapp;
-
-      const leadPayload = {
-        nombre,
-        whatsapp,
-        fixture_downloaded:false,
-        timestamp:new Date().toISOString()
-      };
-
-      // Local sin await
-      try {
-        if (typeof addLead === 'function') addLead(leadPayload);
-      } catch(localErr) {
-        console.warn('addLead local falló', localErr);
-      }
-
-      // Sheets sin await
-      try {
-        if (typeof sendLeadToGoogleSheets === 'function') sendLeadToGoogleSheets(leadPayload);
-      } catch(remoteErr) {
-        console.warn('Sheets lead falló', remoteErr);
-      }
-
-      try {
-        if (typeof trackEvent === 'function') trackEvent('form_completed', { nombre });
-      } catch(trackErr) {}
-
-    } catch(err) {
-      console.warn('Error guardando lead, igual avanza', err);
-    }
-
-    // Lo más importante: avanzar siempre.
-    forceGoScratch();
-    return false;
-  }
-
-  window.hardSubmitLead = hardSubmitLead;
-
-  document.addEventListener('DOMContentLoaded', function(){
-    const form = document.getElementById('leadForm') || document.querySelector('form');
-    if (form) {
-      form.setAttribute('novalidate', 'novalidate');
-      form.onsubmit = hardSubmitLead;
-      form.addEventListener('submit', hardSubmitLead, true);
-    }
-
-    // Detectar botones dentro del formulario o botones que digan activar/ver cupón
-    document.querySelectorAll('button').forEach(btn => {
-      const txt = (btn.textContent || '').toLowerCase();
-      const insideForm = form && form.contains(btn);
-      const looksSubmit = txt.includes('activar') || txt.includes('beneficio') || txt.includes('cupón') || txt.includes('cupon') || txt.includes('continuar');
-      if (insideForm || looksSubmit) {
-        if (insideForm) btn.setAttribute('type', 'button');
-        btn.addEventListener('click', function(ev){
-          const active = document.querySelector('.screen.active')?.id;
-          if (active === 's-form' || insideForm) hardSubmitLead(ev);
-        }, true);
-      }
-    });
-  });
-
-  // Fallback: si el usuario queda en formulario luego del evento completado, lo pasamos.
-  let lastFormCompleted = 0;
-  const oldTrackEvent = window.trackEvent;
-  if (typeof oldTrackEvent === 'function') {
-    window.trackEvent = function(name, data){
-      const result = oldTrackEvent.apply(this, arguments);
-      if (name === 'form_completed') {
-        lastFormCompleted = Date.now();
-        setTimeout(() => {
-          const active = document.querySelector('.screen.active')?.id;
-          if (active === 's-form') forceGoScratch();
-        }, 350);
-      }
-      return result;
-    }
-  }
-})();
-
-
-/* Override seguro para agregar familia */
-(function(){
-  const oldAddHijo = window.addHijo;
-  window.addHijo = function(){
-    const nombre = getBalodinNombre();
-    if (!nombre) {
-      if (typeof showToast === 'function') showToast('Primero dejanos tu nombre', 'err');
-      document.getElementById('f-nombre')?.focus();
-      return;
-    }
-    try {
-      return oldAddHijo ? oldAddHijo.apply(this, arguments) : null;
-    } catch(err) {
-      console.warn('addHijo original falló, usando fallback', err);
-      const container = document.getElementById('hijosContainer');
-      if (!container) return;
-      const i = Date.now();
-      const div = document.createElement('div');
-      div.className = 'hijo-card';
-      div.id = 'hijo_' + i;
-      div.innerHTML = `
-        <div class="form-grid">
-          <div class="field"><label>Nombre del nene/a</label><input name="hnom_${i}" placeholder="Ej: Sofi"></div>
-          <div class="field"><label>Edad</label><input name="hedad_${i}" placeholder="Ej: 6"></div>
-          <div class="field"><label>Cumpleaños</label><input name="hcumple_${i}" placeholder="Ej: 15/08"></div>
-          <div class="field"><label>Género</label><select name="hgenero_${i}"><option value="">Opcional</option><option>Niña</option><option>Niño</option><option>Prefiero no decir</option></select></div>
-        </div>
-        <button type="button" class="mini-remove" onclick="this.closest('.hijo-card').remove()">Quitar</button>
-      `;
-      container.appendChild(div);
-    }
-  };
-})();
-
 </script>
 
 <script>
