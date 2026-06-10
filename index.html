@@ -3155,6 +3155,77 @@ input,select,textarea,button{font-size:16px !important;}
   }
 }
 
+
+/* V62 FINAL DASHBOARD - contraste y validación por WhatsApp */
+.dashboard-search-discount{
+  background:#fff7eb !important;
+  color:#6b1b1f !important;
+  border:1px solid rgba(123,20,28,.14) !important;
+}
+.dashboard-search-discount h3,
+.dashboard-search-discount strong{
+  color:#7b141c !important;
+}
+.dashboard-search-row input,
+#discountSearchInput{
+  background:#ffffff !important;
+  color:#4b1015 !important;
+  border:2px solid rgba(123,20,28,.24) !important;
+}
+.dashboard-search-row input::placeholder,
+#discountSearchInput::placeholder{
+  color:#9b6a64 !important;
+  opacity:1 !important;
+}
+.discount-result{
+  color:#4b1015 !important;
+  line-height:1.45 !important;
+  font-weight:800 !important;
+}
+.discount-ok{
+  color:#087a2d !important;
+  font-weight:900 !important;
+}
+.discount-warn{
+  color:#b31320 !important;
+  font-weight:900 !important;
+}
+.discount-help{
+  color:#6b1b1f !important;
+  font-weight:800 !important;
+}
+.dash-btn,
+button.dash-btn{
+  color:#5b161b !important;
+  font-weight:900 !important;
+  opacity:1 !important;
+}
+.dash-btn.db-green,
+button.db-green,
+#discountSearchResult button{
+  background:#26c96b !important;
+  color:#06391d !important;
+  border:1px solid #10a957 !important;
+}
+.dash-btn.db-gray,
+button.db-gray{
+  background:#fff2e5 !important;
+  color:#6b1b1f !important;
+  border:1px solid rgba(123,20,28,.18) !important;
+}
+.dash-btn.db-red,
+button.db-red{
+  background:#ffb6be !important;
+  color:#7b141c !important;
+  border:1px solid #ff7d8b !important;
+}
+.dash-btn:disabled,
+button:disabled{
+  background:#e8dfd6 !important;
+  color:#6f625b !important;
+  opacity:.78 !important;
+}
+
 </style>
 
 <style id="v49-fixes">
@@ -3638,13 +3709,13 @@ input,select,textarea,button{font-size:16px !important;}
 </div>
 
 <div class="dashboard-search-discount">
-  <h3>🔎 Buscar descuento entregado</h3>
+  <h3>🔎 Validar beneficio por WhatsApp</h3>
   <div class="dashboard-search-row">
-    <input id="discountSearchInput" placeholder="Nombre, apellido o WhatsApp">
+    <input id="discountSearchInput" placeholder="Ingresá WhatsApp del cliente">
     <button class="dash-btn db-green" onclick="searchDiscountDashboard()">Buscar</button>
     <button class="dash-btn db-gray" onclick="clearDiscountSearch()">Limpiar</button>
   </div>
-  <div id="discountSearchResult" class="discount-result">Buscá a la persona antes de entregar el beneficio.</div>
+  <div id="discountSearchResult" class="discount-result">Buscá el WhatsApp antes de entregar el beneficio.</div>
 </div>
 
 <div class="dash-tools">
@@ -5055,7 +5126,7 @@ function searchDiscountDashboard(){
   const qPhone = normalizeBalodinPhone(qRaw);
 
   if (!q && !qPhone) {
-    if(result) result.innerHTML = '<span class="discount-warn">Escribí nombre, apellido o WhatsApp.</span>';
+    if(result) result.innerHTML = '<span class="discount-warn">Escribí el WhatsApp del cliente.</span>';
     return;
   }
 
@@ -5069,7 +5140,7 @@ function searchDiscountDashboard(){
   document.querySelectorAll('.reg-card').forEach(card => card.classList.remove('discount-used','duplicate'));
 
   if (!matches.length) {
-    if(result) result.innerHTML = '<span class="discount-ok">No aparece registrado. Podés entregar el beneficio si corresponde.</span>';
+    if(result) result.innerHTML = '<span class="discount-ok">Ese WhatsApp no aparece registrado. Pedile que complete el formulario antes de entregar el beneficio.</span>';
     return;
   }
 
@@ -5082,7 +5153,7 @@ function searchDiscountDashboard(){
         ${used ? '⚠️ Esta persona YA figura con descuento entregado.' : '✅ Está registrada, pero no figura como descuento entregado.'}
       </div>
       <div>Coincidencias: <strong>${matches.length}</strong>${duplicates ? ' · posible duplicado' : ''}</div>
-      <button class="dash-btn db-green btn-sm" onclick="markDiscountDelivered('${encodeURIComponent(qRaw)}')">Marcar descuento entregado</button>
+      <button class="dash-btn db-green btn-sm" onclick="markDiscountDelivered('${encodeURIComponent(qRaw)}')">Marcar beneficio entregado</button>
     `;
   }
 }
@@ -5090,7 +5161,7 @@ function clearDiscountSearch(){
   const input = document.getElementById('discountSearchInput');
   const result = document.getElementById('discountSearchResult');
   if(input) input.value = '';
-  if(result) result.textContent = 'Buscá a la persona antes de entregar el beneficio.';
+  if(result) result.textContent = 'Buscá el WhatsApp antes de entregar el beneficio.';
   document.querySelectorAll('.reg-card').forEach(card => card.classList.remove('discount-used','duplicate'));
 }
 function markDiscountDelivered(encodedQuery){
@@ -5103,7 +5174,7 @@ function markDiscountDelivered(encodedQuery){
       fecha:new Date().toISOString(),
       session_id:getSessionId()
     });
-    showToast('Descuento marcado como entregado', 'ok');
+    showToast('Beneficio marcado como entregado', 'ok');
     setTimeout(refreshRemoteDashboard, 600);
   } catch(e) {
     showToast('No se pudo marcar. Revisá Sheets.', 'err');
@@ -5174,5 +5245,125 @@ function markDiscountDelivered(encodedQuery){
 
 
 <!-- v53: usa exactamente las imágenes entregadas por el usuario, sin recorte/transparencia -->
+<script>
+
+/* ===== V62 FINAL: validación del beneficio por WhatsApp ===== */
+function normalizeBalodinPhone(v){
+  let raw = String(v || '').replace(/\D/g,'');
+  if (!raw) return '';
+  if (raw.startsWith('549')) raw = raw.slice(3);
+  else if (raw.startsWith('54')) raw = raw.slice(2);
+  if (raw.startsWith('0')) raw = raw.slice(1);
+  if (raw.length > 10) raw = raw.slice(-10);
+  return raw;
+}
+function normalizeBalodinKey(v){
+  return String(v || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();
+}
+function getAllDashboardLeads(){
+  let leads = [];
+  try {
+    if (typeof remoteSheetCache !== 'undefined' && remoteSheetCache && Array.isArray(remoteSheetCache.leads)) {
+      leads = sheetLeadRowsToObjects(remoteSheetCache.leads);
+    }
+  } catch(e) {}
+  try {
+    if (!leads.length && typeof getLeads === 'function') leads = getLeads();
+  } catch(e) {}
+  return leads || [];
+}
+function getLeadPhoneBalodin(l){
+  return normalizeBalodinPhone(l.whatsapp || l.WhatsApp || l.telefono || l.Telefono || l.tel || l.phone || l.celular || '');
+}
+function getLeadNameBalodin(l){
+  return `${l.nombre || l.Nombre || ''} ${l.apellido || l.Apellido || ''}`.trim();
+}
+function isDiscountDeliveredBalodin(l){
+  const val = String(l.descuento || l.Descuento || l.estado || l.Estado || l.discount || '').toLowerCase();
+  return val.includes('entregado') || val.includes('aplicado') || val.includes('usado');
+}
+function searchDiscountDashboard(){
+  const input = document.getElementById('discountSearchInput');
+  const result = document.getElementById('discountSearchResult');
+  const raw = input ? input.value : '';
+  const qPhone = normalizeBalodinPhone(raw);
+
+  if (!qPhone || qPhone.length < 6) {
+    if(result) result.innerHTML = '<span class="discount-warn">Ingresá al menos 6 dígitos del WhatsApp.</span>';
+    return;
+  }
+
+  const leads = getAllDashboardLeads();
+  const matches = leads.filter(l => {
+    const phone = getLeadPhoneBalodin(l);
+    return phone && (phone.includes(qPhone) || qPhone.includes(phone));
+  });
+
+  if (!matches.length) {
+    if(result) {
+      result.innerHTML = `
+        <div class="discount-warn">⚠️ Ese WhatsApp no aparece registrado.</div>
+        <div class="discount-help">Primero debe completar el formulario/cupón. No entregar beneficio todavía.</div>
+      `;
+    }
+    return;
+  }
+
+  const used = matches.some(isDiscountDeliveredBalodin);
+  const principal = matches[0];
+  const phoneShown = getLeadPhoneBalodin(principal);
+  const nameShown = getLeadNameBalodin(principal) || 'Sin nombre';
+
+  if(result) {
+    result.innerHTML = `
+      <div class="${used ? 'discount-warn' : 'discount-ok'}">
+        ${used ? '⚠️ Este WhatsApp YA tiene beneficio entregado.' : '✅ WhatsApp registrado. Beneficio pendiente de entrega.'}
+      </div>
+      <div><strong>Cliente:</strong> ${nameShown}</div>
+      <div><strong>WhatsApp:</strong> ${phoneShown}</div>
+      <div><strong>Coincidencias:</strong> ${matches.length}${matches.length > 1 ? ' · posible duplicado por mismo teléfono' : ''}</div>
+      ${used ? '' : `<button class="dash-btn db-green btn-sm" onclick="markDiscountDelivered('${encodeURIComponent(phoneShown)}')">Marcar beneficio entregado</button>`}
+    `;
+  }
+}
+function clearDiscountSearch(){
+  const input = document.getElementById('discountSearchInput');
+  const result = document.getElementById('discountSearchResult');
+  if(input) input.value = '';
+  if(result) result.textContent = 'Buscá el WhatsApp antes de entregar el beneficio.';
+}
+function markDiscountDelivered(encodedPhone){
+  const phone = decodeURIComponent(encodedPhone || '');
+  try {
+    postToGoogleSheets({
+      type:'discount',
+      action:'mark_delivered',
+      query: phone,
+      whatsapp: phone,
+      fecha:new Date().toISOString(),
+      session_id: typeof getSessionId === 'function' ? getSessionId() : ''
+    });
+    if (typeof showToast === 'function') showToast('Beneficio marcado como entregado para ese WhatsApp', 'ok');
+    setTimeout(function(){
+      if (typeof refreshRemoteDashboard === 'function') refreshRemoteDashboard();
+    }, 900);
+  } catch(e) {
+    if (typeof showToast === 'function') showToast('No se pudo marcar. Revisá la conexión con Sheets.', 'err');
+  }
+}
+document.addEventListener('DOMContentLoaded', function(){
+  const phoneInput = document.getElementById('discountSearchInput');
+  if(phoneInput){
+    phoneInput.setAttribute('inputmode','numeric');
+    phoneInput.setAttribute('autocomplete','tel');
+    phoneInput.setAttribute('placeholder','Ingresá WhatsApp del cliente');
+  }
+  const result = document.getElementById('discountSearchResult');
+  if(result && result.textContent.includes('persona')){
+    result.textContent = 'Buscá el WhatsApp antes de entregar el beneficio.';
+  }
+});
+
+</script>
 </body>
 </html>
