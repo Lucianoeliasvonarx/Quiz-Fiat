@@ -3226,6 +3226,27 @@ button:disabled{
   opacity:.78 !important;
 }
 
+
+/* V63: estado aplicado más visible */
+.discount-warn{
+  background:#ffe1dc !important;
+  border:1px solid #ff9a9a !important;
+  border-radius:12px !important;
+  padding:8px 10px !important;
+  display:block !important;
+}
+.discount-ok{
+  background:#e6ffe9 !important;
+  border:1px solid #6bd98a !important;
+  border-radius:12px !important;
+  padding:8px 10px !important;
+  display:block !important;
+}
+.discount-help{
+  margin-top:6px !important;
+  color:#6b1b1f !important;
+}
+
 </style>
 
 <style id="v49-fixes">
@@ -5363,6 +5384,186 @@ document.addEventListener('DOMContentLoaded', function(){
     result.textContent = 'Buscá el WhatsApp antes de entregar el beneficio.';
   }
 });
+
+</script>
+<script>
+
+/* ===== V63 FINAL: beneficio persistente por WhatsApp + botón Actualizar limpia y refresca ===== */
+const BALODIN_DISCOUNT_STORAGE_KEY = 'balodin_discount_delivered_phones_v1';
+
+function getDeliveredPhonesBalodin(){
+  try {
+    return JSON.parse(localStorage.getItem(BALODIN_DISCOUNT_STORAGE_KEY) || '[]');
+  } catch(e) {
+    return [];
+  }
+}
+function saveDeliveredPhoneBalodin(phone){
+  const clean = normalizeBalodinPhone(phone);
+  if (!clean) return;
+  const list = getDeliveredPhonesBalodin();
+  if (!list.includes(clean)) {
+    list.push(clean);
+    localStorage.setItem(BALODIN_DISCOUNT_STORAGE_KEY, JSON.stringify(list));
+  }
+}
+function isPhoneDeliveredLocallyBalodin(phone){
+  const clean = normalizeBalodinPhone(phone);
+  if (!clean) return false;
+  return getDeliveredPhonesBalodin().some(p => p && (p.includes(clean) || clean.includes(p)));
+}
+function markLocalMatchesAsDeliveredBalodin(phone){
+  const clean = normalizeBalodinPhone(phone);
+  if (!clean) return;
+
+  try {
+    if (typeof remoteSheetCache !== 'undefined' && remoteSheetCache && Array.isArray(remoteSheetCache.leads)) {
+      remoteSheetCache.leads = remoteSheetCache.leads.map(row => {
+        try {
+          const line = JSON.stringify(row);
+          const rowPhone = normalizeBalodinPhone(line);
+          if (rowPhone && (rowPhone.includes(clean) || clean.includes(rowPhone))) {
+            if (Array.isArray(row)) {
+              const copy = row.slice();
+              copy.push('Entregado');
+              return copy;
+            }
+            if (row && typeof row === 'object') {
+              return Object.assign({}, row, { Descuento: 'Entregado', descuento: 'Entregado' });
+            }
+          }
+        } catch(e) {}
+        return row;
+      });
+    }
+  } catch(e) {}
+
+  try {
+    if (typeof getLeads === 'function') {
+      const leads = getLeads();
+      if (Array.isArray(leads)) {
+        const updated = leads.map(l => {
+          const p = getLeadPhoneBalodin(l);
+          if (p && (p.includes(clean) || clean.includes(p))) {
+            return Object.assign({}, l, { Descuento:'Entregado', descuento:'Entregado' });
+          }
+          return l;
+        });
+        localStorage.setItem('balodin_leads', JSON.stringify(updated));
+      }
+    }
+  } catch(e) {}
+}
+
+/* Reescribimos la verificación para considerar Sheets + memoria local */
+function searchDiscountDashboard(){
+  const input = document.getElementById('discountSearchInput');
+  const result = document.getElementById('discountSearchResult');
+  const raw = input ? input.value : '';
+  const qPhone = normalizeBalodinPhone(raw);
+
+  if (!qPhone || qPhone.length < 6) {
+    if(result) result.innerHTML = '<span class="discount-warn">Ingresá al menos 6 dígitos del WhatsApp.</span>';
+    return;
+  }
+
+  const leads = getAllDashboardLeads();
+  const matches = leads.filter(l => {
+    const phone = getLeadPhoneBalodin(l);
+    return phone && (phone.includes(qPhone) || qPhone.includes(phone));
+  });
+
+  const locallyDelivered = isPhoneDeliveredLocallyBalodin(qPhone);
+
+  if (!matches.length && !locallyDelivered) {
+    if(result) {
+      result.innerHTML = `
+        <div class="discount-warn">⚠️ Ese WhatsApp no aparece registrado.</div>
+        <div class="discount-help">Primero debe completar el formulario/cupón. No entregar beneficio todavía.</div>
+      `;
+    }
+    return;
+  }
+
+  const used = locallyDelivered || matches.some(isDiscountDeliveredBalodin);
+  const principal = matches[0] || {};
+  const phoneShown = getLeadPhoneBalodin(principal) || qPhone;
+  const nameShown = getLeadNameBalodin(principal) || 'Cliente registrado';
+
+  if(result) {
+    result.innerHTML = `
+      <div class="${used ? 'discount-warn' : 'discount-ok'}">
+        ${used ? '⚠️ Este WhatsApp YA tiene beneficio entregado.' : '✅ WhatsApp registrado. Beneficio pendiente de entrega.'}
+      </div>
+      <div><strong>Cliente:</strong> ${nameShown}</div>
+      <div><strong>WhatsApp:</strong> ${phoneShown}</div>
+      <div><strong>Coincidencias:</strong> ${matches.length}${matches.length > 1 ? ' · duplicados asociados al mismo teléfono' : ''}</div>
+      ${used ? '<div class="discount-help">No volver a entregar el beneficio a este número.</div>' : `<button class="dash-btn db-green btn-sm" onclick="markDiscountDelivered('${encodeURIComponent(phoneShown)}')">Marcar beneficio entregado</button>`}
+    `;
+  }
+}
+
+/* Al marcar beneficio: guarda local, manda a Sheets y actualiza visual inmediatamente */
+function markDiscountDelivered(encodedPhone){
+  const phone = decodeURIComponent(encodedPhone || '');
+  const clean = normalizeBalodinPhone(phone);
+
+  if (!clean) {
+    if (typeof showToast === 'function') showToast('No se detectó WhatsApp válido.', 'err');
+    return;
+  }
+
+  saveDeliveredPhoneBalodin(clean);
+  markLocalMatchesAsDeliveredBalodin(clean);
+
+  try {
+    postToGoogleSheets({
+      type:'discount',
+      action:'mark_delivered',
+      query: clean,
+      whatsapp: clean,
+      fecha:new Date().toISOString(),
+      session_id: typeof getSessionId === 'function' ? getSessionId() : ''
+    });
+  } catch(e) {}
+
+  if (typeof showToast === 'function') showToast('Beneficio marcado como entregado para ese WhatsApp', 'ok');
+
+  setTimeout(function(){
+    const input = document.getElementById('discountSearchInput');
+    if (input) input.value = clean;
+    searchDiscountDashboard();
+  }, 250);
+}
+
+/* Botón Actualizar: refresca, limpia la consulta y deja listo para buscar de nuevo */
+function clearDiscountSearchAfterRefreshBalodin(){
+  const input = document.getElementById('discountSearchInput');
+  const result = document.getElementById('discountSearchResult');
+  if(input) input.value = '';
+  if(result) result.textContent = 'Buscá el WhatsApp antes de entregar el beneficio.';
+}
+
+(function(){
+  const originalRefreshRemoteDashboard = typeof refreshRemoteDashboard === 'function' ? refreshRemoteDashboard : null;
+  window.refreshRemoteDashboard = async function(){
+    let r;
+    if (originalRefreshRemoteDashboard) {
+      r = await originalRefreshRemoteDashboard.apply(this, arguments);
+    }
+    clearDiscountSearchAfterRefreshBalodin();
+    return r;
+  };
+
+  document.addEventListener('click', function(e){
+    const btn = e.target.closest('button, .dash-btn');
+    if (!btn) return;
+    const text = (btn.textContent || '').trim().toLowerCase();
+    if (text === 'actualizar' || text.includes('actualizar sheets') || text.includes('actualizar')) {
+      setTimeout(clearDiscountSearchAfterRefreshBalodin, 350);
+    }
+  }, true);
+})();
 
 </script>
 </body>
